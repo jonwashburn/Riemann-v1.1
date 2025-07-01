@@ -4,7 +4,7 @@ import Mathlib.NumberTheory.ArithmeticFunction
 import Mathlib.NumberTheory.Primorial
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Complex.Basic
-import Mathlib.Topology.Instances.Real
+-- import Mathlib.Topology.Instances.Real
 import Mathlib.Analysis.SpecialFunctions.Log.Basic
 
 /-!
