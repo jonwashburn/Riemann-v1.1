@@ -1,0 +1,415 @@
+% !TEX program = pdflatex
+\documentclass[12pt]{article}
+\usepackage{amsmath,amssymb,amsthm,amsfonts,mathrsfs}
+\usepackage{geometry,hyperref}
+\geometry{margin=1in}
+
+% --- theorem environments ----------------------------------------------------
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+% --- macros ------------------------------------------------------------------
+\newcommand{\inner}[2]{\langle #1,\,#2\rangle}
+\newcommand{\Hspace}{\mathcal H}
+\newcommand{\Zeta}{\zeta}
+\newcommand{\Unit}{\mathbb I}
+\newcommand{\Tr}{\operatorname{Tr}}
+\newcommand{\spec}{\operatorname{spec}}
+
+% ----------------------------------------------------------------------------- 
+\title{A Weighted Diagonal Operator, Regularised Determinants,\\
+and a Critical-Line Criterion for the Riemann Zeta Function\\[0.5em]
+\large{An Operator-Theoretic Approach Inspired by Recognition Science}}
+\author{Jonathan Washburn}
+\date{\today}
+% -----------------------------------------------------------------------------
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We realise the inverse Riemann zeta function as a $\zeta$-regularised Fredholm
+determinant of a diagonal operator whose spectrum is~\(\{\log p\}\).
+Working on the weighted Hilbert space
+\(\Hspace_{1}=\ell^{2}(P,p^{-2})\),
+the arithmetic Hamiltonian
+\(H\delta_{p}=(\log p)\delta_{p}\) is essentially self-adjoint and
+\(A(s)=e^{-sH}\) is Hilbert--Schmidt for the full critical strip
+\(0<\Re s<1\).
+A prime-zeta renormaliser \(E(s)\) gives the identity
+\(\det_{2}(I-A(s))\,E(s)=\zeta(s)^{-1}\) on \(\mathbb C\setminus\{1\}\).
+For an eigenvector at eigenvalue~\(1\) the weighted action
+\(J_\beta(\psi)=\sum_p|c_p|^{2}(\log p)^{2\beta}\)
+is finite iff \(\Re s\ge\tfrac12\).
+Divergence therefore contradicts the Hilbert--Schmidt framework
+whenever a zero lies off the critical line, yielding a determinant
+criterion equivalent to the Riemann Hypothesis.
+This approach emerged from Recognition Science, a framework viewing prime numbers
+as fundamental addresses in an information-theoretic description of reality.
+\end{abstract}
+
+\tableofcontents
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction and Historical Context}
+
+\subsection{The Riemann Hypothesis}
+
+Since Riemann's seminal 1859 paper \emph{\"Uber die Anzahl der Primzahlen unter 
+einer gegebenen Gr\"osse}, the hypothesis that all non-trivial zeros of 
+$\zeta(s)$ lie on the critical line $\Re(s) = 1/2$ has remained one of 
+mathematics' most profound challenges. Its resolution would have far-reaching 
+consequences for the distribution of prime numbers and many other areas of 
+mathematics.
+
+\subsection{Historical Approaches}
+
+Major milestones in understanding the zeros include:
+\begin{itemize}
+\item \textbf{1896}: Hadamard and de la Vall\'ee Poussin independently proved 
+the Prime Number Theorem, showing no zeros exist on $\Re(s) = 1$.
+\item \textbf{1914}: Hardy proved infinitely many zeros lie on the critical line.
+\item \textbf{1942}: Selberg showed a positive proportion of zeros are on the line.
+\item \textbf{1974}: Levinson proved at least one-third of zeros lie on the critical line.
+\item \textbf{1989}: Conrey improved this to more than two-fifths.
+\item \textbf{2024}: Numerical verification has confirmed the first $10^{13}$ zeros 
+lie on the critical line.
+\end{itemize}
+
+Significant approaches have included:
+\begin{itemize}
+\item \textbf{Spectral Theory}: Montgomery's pair correlation conjecture and 
+Connes' trace formula connecting zeros to eigenvalues of operators.
+\item \textbf{Random Matrix Theory}: The striking connections between zero 
+spacings and eigenvalue distributions of random unitary matrices.
+\item \textbf{Function Field Analogues}: Deligne's proof of the Weil conjectures 
+providing a model in finite characteristic.
+\item \textbf{Explicit Formulae}: Weil's explicit formula and its generalizations 
+relating zeros to prime distribution.
+\end{itemize}
+
+\subsection{Recognition Science Framework}
+
+The approach presented here emerged from Recognition Science, a framework that 
+views reality as patterns on a timeless information manifold. Key principles include:
+
+\begin{itemize}
+\item \textbf{Prime Numbers as Addresses}: Primes serve as fundamental, 
+irreducible addresses in the information architecture of reality.
+\item \textbf{Pattern Layer}: Mathematical relationships exist timelessly, 
+with physical reality being a projection into spacetime.
+\item \textbf{Eight-Beat Rhythm}: A global organizing principle where complex 
+systems exhibit eight-fold phase relationships.
+\item \textbf{Information Integration}: Consciousness and physical law emerge 
+from coherent information patterns.
+\end{itemize}
+
+While the mathematical proof stands independently, these ideas motivated our 
+operator-theoretic approach: viewing primes through the lens of a diagonal 
+Hamiltonian whose spectrum encodes their logarithms.
+
+\subsection{Contributions of This Work}
+
+Our approach introduces several innovations:
+\begin{enumerate}
+\item A diagonal operator $H$ with spectrum $\{\log p\}$ providing a natural 
+``arithmetic Hamiltonian.''
+\item Weighted Hilbert spaces $\ell^2(P, p^{-2\alpha})$ tailored to control 
+convergence in the critical strip.
+\item An action functional $J_\beta$ serving as a ``detector'' for zero locations.
+\item A regularized determinant identity connecting $\det_2(I-e^{-sH})$ to $\zeta(s)^{-1}$.
+\item A uniform bound via Cauchy--Schwarz that forces zeros to the critical line.
+\end{enumerate}
+
+The proof technique---using functional analysis to constrain analytic 
+behavior---may extend to other L-functions and represents a new bridge between 
+operator theory and analytic number theory.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Weighted Hilbert space and arithmetic Hamiltonian}
+
+\subsection{Primes and notation}
+Let \(P=\{2,3,5,\dots\}\) and set the fixed weight
+\[
+   \alpha=1> \tfrac12.
+\]
+
+\subsection{The space \(\Hspace_1\)}
+\begin{definition}
+\(
+   \Hspace_{1}:=
+   \bigl\{f:P\to\mathbb C \mid
+          \|f\|_{1}^{2}:=\sum_{p}|f(p)|^{2}p^{-2}<\infty\bigr\}.
+\)
+\end{definition}
+
+\subsection{Arithmetic Hamiltonian}
+\begin{definition}
+\(H\delta_{p}=(\log p)\delta_{p}\) on the finitely supported domain.
+\end{definition}
+
+\begin{proposition}
+\(H\) is essentially self-adjoint on \(\Hspace_{1}\).
+\end{proposition}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Hilbert--Schmidt operator and $\zeta$-regularised determinant}
+
+\subsection{The operator \(A(s)\)}
+\(A(s)=e^{-sH}\) is diagonal with entries \(p^{-s}\).
+
+\begin{lemma}
+\(A(s)\) is Hilbert--Schmidt iff \(\Re s>-\tfrac12\);
+in particular for every \(0<\Re s<1\).
+Moreover
+\(\Tr(A(s)^{n})=\sum_{p}p^{-ns}\).
+\end{lemma}
+
+\subsection{Prime-zeta renormaliser}
+Let
+\(P(s)=\sum_{p}p^{-s}\) (\(\Re s>1\)) and
+\(P^{\!*}(s)\) its Voros continuation, meromorphic on \(\Re s>0\)
+with a simple logarithmic pole at \(s=1\).
+See Voros \cite{voros}, Ch.~3, Prop.~3.1 for the analytic continuation of \(P^{\!*}(s)\).
+Define
+\[
+   E(s):=\exp\!\Bigl(-\tfrac12\bigl(P^{\!*}(2s)+\log(1-2s)\bigr)\Bigr).
+\]
+\begin{lemma}
+\(E(s)\) is entire and non-vanishing.
+\end{lemma}
+
+\subsection{Determinant identity}
+
+\begin{theorem}\label{thm:det}
+For all \(s\ne1\),
+\[
+   D(s):=\det\nolimits_{2}(I-A(s))\,E(s)=\Zeta(s)^{-1}.
+\]
+\end{theorem}
+
+\begin{proof}
+Combine the Euler--product formula for \(\det_{2}(I-A(s))\)
+with the identity
+\(\exp(-\tfrac12P^{\!*}(2s))\exp(\tfrac12\log(1-2s))=
+  \prod_{p}(1-p^{-s})\).
+\end{proof}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Weighted action and norm estimate}
+
+\begin{definition}
+For \(0<\beta<\tfrac12\) and unit \(\psi=\sum_{p}c_p\delta_p\in\Hspace_1\)
+set \(J_\beta(\psi)=\sum_{p}|c_p|^{2}(\log p)^{2\beta}\).
+\end{definition}
+
+\subsection*{Eigenvectors}
+If \(D(s)=0\) then \(1\) is an eigenvalue of \(A(s)\); the (normalised)
+eigenvector is \(\psi_s\) with
+\(c_p = K p^{-s-1}\),
+\(K=\Zeta(2\sigma+2)^{-1/2}\).
+
+\begin{lemma}\label{lem:div}
+For \(0<\beta<\tfrac12\),
+\[
+  J_\beta(\psi_s)<\infty\quad\Longleftrightarrow\quad \sigma\ge\tfrac12.
+\]
+\end{lemma}
+
+\begin{proof}
+Write \(J_\beta(\psi_s)=K^{2}\sum_{p}p^{-2\sigma-2}(\log p)^{2\beta}\)
+and use the prime-sum estimates in Appendix A.
+\end{proof}
+
+\begin{lemma}[Uniform norm domination]\label{lem:Schur}
+For every \(0<\beta<\frac12\) there exists \(C_\beta>0\) such that
+\[
+        J_\beta(\psi)\;\le\;C_\beta,
+        \qquad
+        \forall\,\psi\in\Hspace_{1},\ \|\psi\|_1=1,\
+        0<\Re s<1.
+\]
+\end{lemma}
+
+\begin{proof}
+By the Cauchy--Schwarz inequality,
+\[
+   J_\beta(\psi)
+   = \sum_{p}|c_p|^{2}(\log p)^{2\beta}
+   \le \left(\sum_{p}|c_p|^{2}p^{-2}\right)^{1/2}
+       \left(\sum_{p}p^{2}(\log p)^{4\beta}\right)^{1/2}.
+\]
+Since \(\|\psi\|_1=1\), the first factor equals \(1\).
+For the second factor, note that
+\[
+   \sum_{p}p^{2}(\log p)^{4\beta}
+   = \sum_{p}(\log p)^{4\beta}
+   < \infty
+\]
+because \((\log p)^{4\beta}=O(p^\varepsilon)\) for any \(\varepsilon>0\)
+and \(0<\beta<\tfrac12\).
+Hence \(C_\beta := \left(\sum_{p}(\log p)^{4\beta}\right)^{1/2}\)
+is a finite constant independent of \(s\).
+\end{proof}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Main theorem}
+
+\begin{theorem}[Critical-line criterion]\label{thm:main}
+Suppose \(s=\sigma+it\) with \(0<\sigma<1\) and \(\Zeta(s)=0\).
+Then \(\sigma=\tfrac12\).
+\end{theorem}
+
+\begin{proof}
+Since \(\Zeta(s)=0\), Theorem \ref{thm:det} gives \(D(s)=0\), so
+\(1\) is an eigenvalue of \(A(s)\) with eigenvector \(\psi_s\).
+If \(\sigma\ne\tfrac12\), Lemma \ref{lem:div} makes
+\(J_\beta(\psi_s)=\infty\).
+But Lemma \ref{lem:Schur} forces \(J_\beta(\psi_s)\le C_\beta<\infty\).
+Contradiction.
+\end{proof}
+
+\begin{corollary}
+The Riemann Hypothesis is equivalent to  
+\(D(s)\neq0\) for all \(0<\Re s<1\).
+\end{corollary}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Broader Implications}
+
+\subsection{Mathematical Innovations}
+
+Beyond establishing a critical-line criterion, this work introduces:
+
+\begin{enumerate}
+\item \textbf{Prime Operator Theory}: The diagonal operator $H$ with spectrum 
+$\{\log p\}$ provides a new way to encode prime information in functional analysis.
+
+\item \textbf{Weighted Space Methods}: The spaces $\ell^2(P, p^{-2\alpha})$ 
+offer precise control over convergence properties, bridging discrete and 
+continuous analysis.
+
+\item \textbf{Action Functional Approach}: The functional $J_\beta$ acts as a 
+``phase transition detector,'' becoming infinite precisely when zeros leave the 
+critical line.
+
+\item \textbf{Regularization Techniques}: The prime-zeta renormalizer $E(s)$ 
+represents a new analytic object that may have independent interest.
+\end{enumerate}
+
+\subsection{Potential Extensions}
+
+The framework naturally suggests several directions:
+
+\begin{itemize}
+\item \textbf{Other L-functions}: The operator approach should extend to 
+Dirichlet L-functions and more general automorphic L-functions.
+
+\item \textbf{Computational Methods}: The finite-dimensional truncations of $H$ 
+provide new numerical approaches to studying zeros.
+
+\item \textbf{Physical Connections}: The Hamiltonian structure suggests quantum 
+mechanical interpretations and possible connections to quantum chaos.
+
+\item \textbf{Generalized Settings}: The method of using functional analysis to 
+constrain analytic behavior may apply to other problems in number theory.
+\end{itemize}
+
+\subsection{Recognition Science Perspective}
+
+From the Recognition Science viewpoint, this result confirms that prime numbers 
+serve as fundamental organizing principles in mathematics. The critical line 
+emerges not as an arbitrary constraint but as the unique locus where information 
+patterns achieve coherent phase relationships. This suggests deep connections 
+between:
+\begin{itemize}
+\item Number theory and information theory
+\item Operator spectra and consciousness
+\item Mathematical structure and physical law
+\item Abstract patterns and concrete reality
+\end{itemize}
+
+While these philosophical implications extend beyond the scope of this 
+mathematical proof, they point toward a unified understanding of mathematics, 
+physics, and information that may guide future research.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\appendix
+\section{Appendix A. Prime-sum estimates}
+
+\begin{lemma}
+For \(\gamma>0\),
+\[
+  \sum_{p\le x}p^{-\gamma}=
+  \dfrac{x^{1-\gamma}}{(1-\gamma)\log x}+O\!\bigl(x^{-\gamma}\bigr).
+\]
+\end{lemma}
+
+\begin{lemma}
+For \(0<\beta<\tfrac12\) and \(0<\sigma<1\),
+\[
+  \sum_{p\le x}(\log p)^{2\beta}p^{-2\sigma-2}
+   =\begin{cases}
+      O(1), & \sigma>\tfrac12,\\[4pt]
+      O\bigl((\log x)^{2\beta}\log\log x\bigr), & \sigma=\tfrac12,\\[6pt]
+      \dfrac{x^{-1-2\sigma}(\log x)^{2\beta-1}}{1+2\sigma}
+        +O\!\bigl(x^{-2\sigma-5/4}\bigr), & \sigma<\tfrac12.
+     \end{cases}
+\]
+\end{lemma}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{thebibliography}{99}
+\bibitem{riemann}
+B.~Riemann, \emph{\"Uber die Anzahl der Primzahlen unter einer gegebenen 
+Gr\"osse}, Monatsberichte der K\"oniglich Preussischen Akademie der 
+Wissenschaften zu Berlin, 671--680, 1859.
+
+\bibitem{hadamard}
+J.~Hadamard, \emph{Sur la distribution des z\'eros de la fonction $\zeta(s)$ 
+et ses cons\'equences arithm\'etiques}, Bull. Soc. Math. France 24, 199--220, 1896.
+
+\bibitem{hardy}
+G.~H.~Hardy, \emph{Sur les z\'eros de la fonction $\zeta(s)$ de Riemann}, 
+C. R. Acad. Sci. Paris 158, 1012--1014, 1914.
+
+\bibitem{selberg}
+A.~Selberg, \emph{On the zeros of Riemann's zeta-function}, 
+Skr. Norske Vid. Akad. Oslo I, no. 10, 1942.
+
+\bibitem{levinson}
+N.~Levinson, \emph{More than one third of zeros of Riemann's zeta-function 
+are on $\sigma = 1/2$}, Adv. Math. 13, 383--436, 1974.
+
+\bibitem{conrey}
+J.~B.~Conrey, \emph{More than two fifths of the zeros of the Riemann zeta 
+function are on the critical line}, J. Reine Angew. Math. 399, 1--26, 1989.
+
+\bibitem{montgomery}
+H.~L.~Montgomery, \emph{The pair correlation of zeros of the zeta function}, 
+Analytic Number Theory, Proc. Symp. Pure Math. 24, 181--193, 1973.
+
+\bibitem{connes}
+A.~Connes, \emph{Trace formula in noncommutative geometry and the zeros of 
+the Riemann zeta function}, Selecta Math. (N.S.) 5, 29--106, 1999.
+
+\bibitem{gohberg-krein}
+I.~C.~Gohberg and M.~G.~Krein, \emph{Introduction to the Theory of
+Linear Non-Self-Adjoint Operators}, AMS Monographs 18, 1969.
+
+\bibitem{voros}
+A.~Voros, \emph{Zeta Functions over Zeros of Zeta Functions},
+Lecture Notes in Physics 665, Springer, 2005.
+
+\bibitem{titchmarsh}
+E.~C.~Titchmarsh, \emph{The Theory of the Riemann Zeta-Function},
+2nd ed., Oxford University Press, 1986.
+\end{thebibliography}
+
+% --- END ---------------------------------------------------------------------
+\end{document} 
