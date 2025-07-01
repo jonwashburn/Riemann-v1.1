@@ -1,11 +1,14 @@
-import Mathlib
+import RiemannHypothesis.Infrastructure.WeightedHilbertSpace
 
 /-!
 # Arithmetic Hamiltonian
 
-Key features:
-- Self-adjoint Hamiltonian
-- Diagonal evolution operator with entries p^{-s}
-- Hilbert-Schmidt property for the critical strip
-- Connection to the Recognition Science framework through helper definitions
+This file re-exports the arithmetic Hamiltonian and operator A(s) from WeightedHilbertSpace.
 -/
+
+namespace RiemannHypothesis
+
+-- Re-export the operator A(s) so it's available at the top level
+export WeightedHilbertSpace (operatorA domainA operatorA_wellDefined)
+
+end RiemannHypothesis
