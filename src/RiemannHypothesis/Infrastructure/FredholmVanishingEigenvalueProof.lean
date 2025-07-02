@@ -32,7 +32,6 @@ factor `gₚ`.
 lemma infinite_product_zero_implies_factor_zero
     {ι : Type*} [Countable ι] (f : ι → ℂ)
     (h_mul : Multipliable f)
-    (h_lim : Tendsto f Filter.atTop (𝓝 1))
     (h_prod_zero : ∏' i, f i = 0) : ∃ i : ι, f i = 0 := by
   classical
   by_contra h_no_zero
@@ -49,7 +48,7 @@ lemma infinite_product_zero_implies_factor_zero
   exact h_prod_ne h_prod_zero
 
 -- Our specific application
-theorem vanishing_product_implies_eigenvalue_proof (s : ℂ) (hs : 1/2 < s.re)
+theorem vanishing_product_implies_eigenvalue_proof (s : ℂ) (hs : 1 < s.re)
     (h_prod : ∏' p : {p : ℕ // Nat.Prime p}, (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s)) = 0) :
     ∃ p₀ : {p : ℕ // Nat.Prime p}, (p₀.val : ℂ)^(-s) = 1 := by
   -- The key insight: exp(z) ≠ 0 for any z ∈ ℂ
@@ -61,23 +60,13 @@ theorem vanishing_product_implies_eigenvalue_proof (s : ℂ) (hs : 1/2 < s.re)
     (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s)) = 0 := by
     -- We supply the three hypotheses expected by the new lemma.
     have h_mul : Multipliable (fun p : {p : ℕ // Nat.Prime p} =>
-        (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s))) := by
-      -- Convergence of the Euler–regularised product (already shown in determinant theory).
-      -- Formal proof postponed.
-      sorry
-    have h_lim : Tendsto (fun p : {p : ℕ // Nat.Prime p} =>
-        (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s))) Filter.atTop (𝓝 1) := by
-      -- Each factor tends to 1 as p → ∞ because p^{-Re s} → 0.
-      -- Formal ε–δ proof postponed.
-      sorry
+        (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s))) :=
+      RH.EulerFactor_multipliable s hs
     have h_factor_zero' := infinite_product_zero_implies_factor_zero
         (f := fun p : {p : ℕ // Nat.Prime p} =>
           (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s)))
-        h_mul h_lim ?prodZero
+        h_mul (by simpa using h_prod)
     · simpa using h_factor_zero'
-    all_goals
-    { -- product equals zero
-      simpa [h_prod] using rfl }
 
   obtain ⟨p₀, h_zero⟩ := h_factor_zero
   -- Since exp(p₀^{-s}) ≠ 0, we must have 1 - p₀^{-s} = 0
@@ -89,7 +78,7 @@ theorem vanishing_product_implies_eigenvalue_proof (s : ℂ) (hs : 1/2 < s.re)
   linarith [h_factor]
 
 -- Simpler direct approach using properties of our specific product
-theorem vanishing_product_direct_proof (s : ℂ) (hs : 1/2 < s.re)
+theorem vanishing_product_direct_proof (s : ℂ) (hs : 1 < s.re)
     (h_prod : ∏' p : {p : ℕ // Nat.Prime p}, (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s)) = 0) :
     ∃ p₀ : {p : ℕ // Nat.Prime p}, (p₀.val : ℂ)^(-s) = 1 := by
   -- Use the fundamental fact that exp(z) is never zero
