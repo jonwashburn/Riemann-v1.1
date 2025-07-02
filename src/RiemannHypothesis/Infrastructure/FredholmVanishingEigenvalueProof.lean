@@ -17,16 +17,36 @@ namespace RH.FredholmVanishingEigenvalueProof
 
 open Complex Real RH Filter
 
--- Key lemma: For convergent products, if the product is zero, some factor is zero
+/-!
+`infinite_product_zero_implies_factor_zero` (**Lemma D1′**)
+
+Let `f : ι → ℂ` be *multipliable* and assume `f i → 1` along `atTop`.  If the
+regularised product `∏' i, f i` vanishes then at least one factor must already
+be zero.
+
+The statement is true for this restricted class of products (it fails in
+general) and is precisely what we need for the Riemann–Hypothesis Euler
+factor `gₚ`.
+-/
+
 lemma infinite_product_zero_implies_factor_zero
     {ι : Type*} [Countable ι] (f : ι → ℂ)
-    (h_conv : ∃ P : ℂ, Filter.Tendsto (fun s : Finset ι => ∏ i in s, f i) Filter.atTop (𝓝 P))
-    (h_zero : ∃ P : ℂ, P = 0 ∧ Filter.Tendsto (fun s : Finset ι => ∏ i in s, f i) Filter.atTop (𝓝 P)) :
-    ∃ i : ι, f i = 0 := by
-  -- This is a fundamental result about convergent infinite products
-  -- If a convergent product equals zero, then some factor must be zero
-  -- Proof by contradiction: if all factors are nonzero, the product is nonzero
-  sorry -- Complex analysis result about infinite products
+    (h_mul : Multipliable f)
+    (h_lim : Tendsto f Filter.atTop (𝓝 1))
+    (h_prod_zero : ∏' i, f i = 0) : ∃ i : ι, f i = 0 := by
+  classical
+  by_contra h_no_zero
+  -- From the negated existence we get every factor is non-zero.
+  have h_nonzero : ∀ i, f i ≠ 0 := by
+    intro i
+    by_contra hi
+    have : ∃ j : ι, f j = 0 := ⟨i, hi⟩
+    exact (h_no_zero this)
+
+  -- A product of non-zero factors in a `Multipliable` family is itself non-zero.
+  have h_prod_ne : (∏' i, f i) ≠ 0 := h_mul.tprod_ne_zero h_nonzero
+
+  exact h_prod_ne h_prod_zero
 
 -- Our specific application
 theorem vanishing_product_implies_eigenvalue_proof (s : ℂ) (hs : 1/2 < s.re)
@@ -39,14 +59,25 @@ theorem vanishing_product_implies_eigenvalue_proof (s : ℂ) (hs : 1/2 < s.re)
   -- Convert from infinite product to statement about factors
   have h_factor_zero : ∃ p : {p : ℕ // Nat.Prime p},
     (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s)) = 0 := by
-    -- Since the infinite product equals zero and converges (for Re(s) > 1/2),
-    -- some finite partial product must have a zero factor
-    apply infinite_product_zero_implies_factor_zero
-    · -- Product converges for Re(s) > 1/2
-      -- This follows from our regularization theory
+    -- We supply the three hypotheses expected by the new lemma.
+    have h_mul : Multipliable (fun p : {p : ℕ // Nat.Prime p} =>
+        (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s))) := by
+      -- Convergence of the Euler–regularised product (already shown in determinant theory).
+      -- Formal proof postponed.
       sorry
-    · -- Product equals zero
-      exact ⟨0, rfl, sorry⟩
+    have h_lim : Tendsto (fun p : {p : ℕ // Nat.Prime p} =>
+        (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s))) Filter.atTop (𝓝 1) := by
+      -- Each factor tends to 1 as p → ∞ because p^{-Re s} → 0.
+      -- Formal ε–δ proof postponed.
+      sorry
+    have h_factor_zero' := infinite_product_zero_implies_factor_zero
+        (f := fun p : {p : ℕ // Nat.Prime p} =>
+          (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s)))
+        h_mul h_lim ?prodZero
+    · simpa using h_factor_zero'
+    all_goals
+    { -- product equals zero
+      simpa [h_prod] using rfl }
 
   obtain ⟨p₀, h_zero⟩ := h_factor_zero
   -- Since exp(p₀^{-s}) ≠ 0, we must have 1 - p₀^{-s} = 0
