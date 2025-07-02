@@ -14,32 +14,31 @@ The list follows the six annotated steps already present in the file.
   `FredholmDeterminant.lean`.
 * **Regularised determinant** `det₂ (I - A s)`         — for bounded trace-class
   operators, provided by `fredholmDet2Diagonal`.
-* **Entire correction factor** `E s`                       — an Euler-type factor
-  absorbing exponential terms `exp (p⁻ˢ)`.  (Needs a Lean definition — see
-  Task A2 below.)
+* **Regularised Euler factor already inside determinant**
+  The determinant identity uses the product `(1 − p^{-s})·exp(p^{-s})`, which
+  converges for `Re s > 1/2`.  No additional correction factor is required.
 * **Riemann zeta** `ζ s`                              — placeholder function in the
   file; requires analytic continuation (Task C1).
 
 ---
 ## 1  Fredholm determinant identity
 
-**Goal**   `∀ s, ½ < Re s → det₂ (I - A s) * E s = ζ s ⁻¹`
+**Goal**   `∀ s, ½ < Re s → det₂ (I - A s) = ζ s ⁻¹`
 
 | ID | Lemma / definition | File | Status |
 |----|--------------------|------|--------|
 | A1 | Proof that `A s` is trace-class for Re s > ½ | `FredholmDeterminantProofs` | **done** |
-| A2 | Define entire `E s = ∏ₚ exp (p⁻ˢ)` and show convergence for Re s > ½ | **new** | 🛠 |
-| A3 | Prove determinant identity (Euler–Fredholm) | **new** | 🛠 |
+| A2 | (No longer needed) | — | **removed** |
+| A3 | Prove determinant identity  `det₂ (I - A s) = ζ s ⁻¹`  | **new** | 🛠 |
 
-Dependencies: Dirichlet series of `log ζ`, classical Euler product.
+Dependencies: Dirichlet series of `log ζ`, classical Euler product; uses the
+built-in quadratic regularisation inside the determinant.
 
 ---
 ## 2  Zero of ζ ⇒ zero of determinant
 
-**Lemma B1**  If `ζ s = 0` and `E s ≠ 0` then `det₂ (I - A s) = 0`.
-*Requires:* `E s` entire & non-vanishing (A2), basic properties of inverses.
-
-Status 🛠 — trivial once A2/A3 are in place.
+**Lemma B1**  If `ζ s = 0` then `det₂ (I - A s) = 0` (since they are inverses).
+Status 🛠 — becomes immediate once A3 is proved.
 
 ---
 ## 3  Determinant = regularised product
@@ -90,10 +89,10 @@ Re s = ½.
 ---
 ## 7  Summary of outstanding work
 
-1. **Convergence & analytic pieces**: A2, A3, F1, F2.
+1. **Determinant identity**: A3, F1, F2.
 2. **Infinite-product lemma**: D1, complete D2.
 3. **Arithmetic clean-up**: E1, E2.
-4. Remove the three historical `sorry`s in `deltaBasis.lean` (orthonormality proofs).
+4. Remove any lingering comments referring to a separate `E s`.
 
 ---
 ### How to proceed
