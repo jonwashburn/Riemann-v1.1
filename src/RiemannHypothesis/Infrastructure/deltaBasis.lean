@@ -106,16 +106,12 @@ lemma conj_symm (f g : ℕ → ℂ) :
     rw [← ofReal_pow, conj_ofReal]
   · simp
 
-lemma add_left (f g h : ℕ → ℂ) :
+lemma add_left (f g h : ℕ → ℂ)
+    (hf : Summable (fun p : ℕ => if p.Prime then f p * conj (h p) * (p : ℂ)^(-2 : ℂ) else 0))
+    (hg : Summable (fun p : ℕ => if p.Prime then g p * conj (h p) * (p : ℂ)^(-2 : ℂ) else 0)) :
     weightedInnerProduct (f + g) h = weightedInnerProduct f h + weightedInnerProduct g h := by
-  simp only [weightedInnerProduct, Pi.add_apply]
-  rw [← tsum_add]
-  congr 1
-  ext p
-  split_ifs with hp
-  · ring
-  · simp
-  sorry
+  classical
+  simpa [weightedInnerProduct, Pi.add_apply, mul_add] using (hf.tsum_add hg)
 
 lemma smul_left (c : ℂ) (f g : ℕ → ℂ) :
     weightedInnerProduct (c • f) g = c * weightedInnerProduct f g := by
@@ -178,9 +174,47 @@ noncomputable def deltaExpansion (f : ℕ → ℂ) : ℕ → ℂ :=
 
 /-- Key property: functions can be expanded in the delta basis -/
 theorem delta_expansion_property (f : ℕ → ℂ) (p : ℕ) (hp : p.Prime) :
-    deltaExpansion f p = f p * (p : ℂ)^(2 : ℂ) := by
+    deltaExpansion f p = f p := by
+  -- Unfold the definition.
   simp only [deltaExpansion, hp, dif_pos]
-  sorry
+  -- Evaluate the weighted inner product with the delta basis.
+  have : weightedInnerProduct f (DeltaBasis.mk' p hp).eval = f p * (p : ℂ)^(-2 : ℂ) := by
+    -- Only the `q = p` term contributes to the sum.
+    have h_sum : (∑' q : ℕ,
+        if q.Prime then f q * conj (((DeltaBasis.mk' p hp).eval) q) * (q : ℂ)^(-2 : ℂ) else 0)
+        = f p * (p : ℂ)^(-2 : ℂ) := by
+      -- Split the `tsum` using `tsum_eq_single`.
+      have h₁ : (DeltaBasis.mk' p hp).eval p = 1 := by
+        simp [DeltaBasis.eval]
+      have h₂ : ∀ q, q ≠ p → (DeltaBasis.mk' p hp).eval q = 0 := by
+        intro q hq
+        simp [DeltaBasis.eval, hq]
+      -- Use `tsum_eq_single`.
+      -- Provide the required condition: for `q` not equal to `p`, the summand is zero.
+      have h_main : ∀ q, q ≠ p →
+          (if q.Prime then f q * conj (((DeltaBasis.mk' p hp).eval) q) * (q : ℂ)^(-2 : ℂ) else 0) = 0 := by
+        intro q hq
+        by_cases hprime : q.Prime
+        · -- Then the delta evaluates to 0.
+          have : ((DeltaBasis.mk' p hp).eval) q = 0 := by
+            simpa using h₂ q hq
+          simp [hprime, this]
+        · simp [hprime]
+      -- Now use `tsum_eq_single`.
+      have := tsum_eq_single p h_main
+      -- Compute the value at `p`.
+      simpa [hp, h₁] using this
+    simpa [weightedInnerProduct] using h_sum
+  -- Simplify the remaining scalar factor `p ^ (-2) * p ^ 2` to `1`.
+  have hcancel : (p : ℂ) ^ (-2 : ℂ) * (p : ℂ) ^ (2 : ℂ) = 1 := by
+    have hp0 : (p : ℂ) ≠ 0 := by
+      exact_mod_cast (Nat.Prime.ne_zero hp)
+    -- Use the `cpow_add` law: x^(a+b) = x^a * x^b when `x ≠ 0`.
+    have h := (Complex.cpow_add (x := (p : ℂ)) (-2 : ℂ) 2 hp0).symm
+    -- The RHS of `h` is the product we want; the LHS is `x^0 = 1`.
+    simpa [add_comm, add_left_neg, Complex.cpow_zero] using h
+
+  simpa [this, hcancel, mul_comm, mul_left_comm, mul_assoc]
 
 /-- Connection to Recognition Science: fundamental tick time -/
 noncomputable def fundamentalTick : ℝ := 7.33e-15  -- 7.33 femtoseconds
