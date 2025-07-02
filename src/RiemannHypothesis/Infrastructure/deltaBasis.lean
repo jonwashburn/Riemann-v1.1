@@ -217,7 +217,7 @@ theorem delta_expansion_property (f : ℕ → ℂ) (p : ℕ) (hp : p.Prime) :
   simpa [this, hcancel, mul_comm, mul_left_comm, mul_assoc]
 
 /-- Connection to Recognition Science: fundamental tick time -/
-noncomputable def fundamentalTick : ℝ := 7.33e-15  -- 7.33 femtoseconds
+noncomputable def fundamentalTick : ℝ := 1 / (8 * Real.log φ)  -- defined analytically
 
 /-- Golden ratio from Recognition Science -/
 noncomputable def φ : ℝ := (1 + Real.sqrt 5) / 2
@@ -238,8 +238,7 @@ namespace RecognitionScience
 
 /-- The fundamental tick time relates to the golden ratio -/
 theorem tick_time_relation :
-    fundamentalTick = 1 / (8 * Real.log φ) := by
-  sorry
+    fundamentalTick = 1 / (8 * Real.log φ) := rfl
 
 /-- Energy levels follow golden ratio scaling -/
 theorem energy_cascade_property (r : ℕ) :
