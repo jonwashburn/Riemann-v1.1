@@ -4,6 +4,7 @@ import Mathlib.Topology.Algebra.InfiniteSum.Basic
 import RiemannHypothesis.Analysis.ExpBounds
 import RiemannHypothesis.Analysis.LogBounds
 import RiemannHypothesis.NumberTheory.PrimeSum
+import RiemannHypothesis.Analysis.PrimeFilters
 
 /-!
 # Euler–Exponential Correction Factor `E s`
@@ -97,9 +98,9 @@ lemma EulerFactor_multipliable (s : ℂ) (hs : 1 < s.re) :
       -- We need to show that eventually `p^{-s}` has norm ≤ 1/2.
       -- This follows from `p^{-Re s} → 0` as `p → ∞` because Re s > 1.
       have h_tendsto_zero :
-          Tendsto (fun p : {p : ℕ // Nat.Prime p} => (p.val : ℂ)^(-s)) Filter.atTop (𝓝 0) := by
-        -- Placeholder for the filter argument (`tendsto_coe_atTop` etc.)
-        sorry
+          Tendsto (fun p : {p : ℕ // p.Prime} => (p : ℂ) ^ (-s)) atTop (𝓝 0) := by
+        have h_re : 0 < s.re := by linarith
+        exact (tendsto_zpow_atTop_zero (show -s.re < 0 by simpa)).comp (tendsto_coe_nat_atTop_atTop.comp tendsto_atTop_primes)
       -- The limit implies that eventually the norm is small enough.
       have h_eventually_le :=
         (Metric.tendsto_atTop.mp h_tendsto_zero) (1/2) (by linarith)
