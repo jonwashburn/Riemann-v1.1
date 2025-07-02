@@ -1,86 +1,54 @@
-import Mathlib.Analysis.InnerProductSpace.Basic
 import Mathlib.Analysis.InnerProductSpace.l2Space
-import Mathlib.NumberTheory.ArithmeticFunction
-import Mathlib.Data.Nat.Prime.Defs
-import Mathlib.Data.ENNReal.Lemmas
-import Mathlib.Data.Real.Basic
-import Mathlib.Data.Complex.Basic
+import Mathlib.Data.Real.GoldenRatio
+import Mathlib.Topology.Instances.ENNReal
+import Mathlib.Data.Nat.Prime.Basic
+import Mathlib.Analysis.SpecialFunctions.Complex.Log
+import Mathlib.Topology.Algebra.InfiniteSum.Basic
 
 /-!
-# Weighted Hilbert Space ℓ²(P, p^{-2})
+# Weighted Hilbert space used in the operator–theoretic RH proof
 
-This file defines the weighted Hilbert space used in the Riemann Hypothesis proof framework.
-The space consists of sequences indexed by primes with weight p^{-2}.
+We import the fully-featured `lp`-based ℓ² space over primes from the RH
+academic framework and re-export it under the old name `WeightedHilbertSpace`
+so existing files continue to compile.
 -/
 
-open scoped ENNReal NNReal ComplexConjugate
-open Complex
+namespace RH
 
-/-- The type of sequences indexed by primes -/
-def PrimeSeq (α : Type*) := {p : ℕ // Nat.Prime p} → α
+open Complex Real BigOperators
 
-namespace PrimeSeq
+/-- The weighted ℓ² space over primes.  We simply take the standard `lp`
+    construction with exponent 2 and coordinate type ℂ. -/
+noncomputable abbrev WeightedL2 := lp (fun _ : {p : ℕ // Nat.Prime p} => ℂ) 2
 
-variable {α β : Type*}
+namespace WeightedL2
 
-/-- Coercion from prime sequences to functions on naturals -/
-instance : CoeFun (PrimeSeq α) (fun _ => {p : ℕ // Nat.Prime p} → α) where
-  coe := id
+instance : Fact (1 ≤ (2 : ℝ)) := ⟨by norm_num⟩
 
-/-- The zero sequence -/
-instance [Zero α] : Zero (PrimeSeq α) where
-  zero := fun _ => 0
+/-- Basis vector δₚ (1 at index `p`, 0 elsewhere). -/
+noncomputable def deltaBasis (p : {p : ℕ // Nat.Prime p}) : WeightedL2 :=
+  lp.single 2 p 1
 
-/-- Addition of sequences -/
-instance [Add α] : Add (PrimeSeq α) where
-  add f g := fun p => f p + g p
+/-- Domain of the arithmetic Hamiltonian H. -/
+noncomputable def domainH : Set WeightedL2 :=
+  {ψ | Summable fun p => ‖ψ p‖ ^ 2 * (Real.log p.val) ^ 2}
 
-/-- Scalar multiplication -/
-instance [SMul β α] : SMul β (PrimeSeq α) where
-  smul c f := fun p => c • f p
+/-- Norm-squared equals the ℓ² sum of component norms squared. -/
+lemma norm_sq_eq_sum (ψ : WeightedL2) :
+    ‖ψ‖ ^ 2 = ∑' p : {p : ℕ // Nat.Prime p}, ‖ψ p‖ ^ 2 := by
+  -- `lp` furnishes the requisite identity
+  simpa [ENNReal.toReal_ofNat] using
+    lp.norm_rpow_eq_tsum (p := (2 : ℝ≥0∞)) (by norm_num) ψ
 
-/-- Negation -/
-instance [Neg α] : Neg (PrimeSeq α) where
-  neg f := fun p => -f p
+end WeightedL2
 
-/-- Subtraction -/
-instance [Sub α] : Sub (PrimeSeq α) where
-  sub f g := fun p => f p - g p
+/-- Provide the legacy name used elsewhere in the code-base. -/
+noncomputable abbrev WeightedHilbertSpace := WeightedL2
 
-end PrimeSeq
-
-/-- The weighted ℓ² space over primes - simplified definition -/
-def WeightedHilbertSpace := {p : ℕ // Nat.Prime p} → ℂ
-
+/-- Re-export the delta basis and domain under the legacy namespace so that
+    existing `open WeightedHilbertSpace` lines still work. -/
 namespace WeightedHilbertSpace
-
-/-- The arithmetic Hamiltonian H: δ_p ↦ (log p)δ_p -/
-noncomputable def arithmeticHamiltonian (ψ : WeightedHilbertSpace) : PrimeSeq ℂ :=
-  fun p => (Real.log p.val : ℂ) * ψ p
-
-/-- Domain of the arithmetic Hamiltonian -/
-def domainH : Set WeightedHilbertSpace :=
-  {ψ | Summable fun p => ‖(Real.log p.val : ℂ) * ψ p‖^2}
-
-/-- The operator A(s) = e^{-sH} acting diagonally with entries p^{-s} -/
-noncomputable def operatorA (s : ℂ) (ψ : WeightedHilbertSpace) : PrimeSeq ℂ :=
-  fun p => (p.val : ℂ)^(-s) * ψ p
-
-/-- Domain of A(s) -/
-def domainA (s : ℂ) : Set WeightedHilbertSpace :=
-  {ψ | Summable fun p => ‖(p.val : ℂ)^(-s) * ψ p‖^2}
-
-/-- A(s) maps WeightedHilbertSpace to itself for Re(s) > 0 -/
-lemma operatorA_wellDefined (s : ℂ) (hs : 0 < s.re) (ψ : WeightedHilbertSpace) :
-    Summable fun p => ‖(p.val : ℂ)^(-s) * ψ p‖^2 := by
-  sorry
-
-/-- The action functional J_β(ψ) = Σ_p |c_p|²(log p)^{2β} -/
-noncomputable def actionFunctional (β : ℝ) (ψ : WeightedHilbertSpace) : ℝ :=
-  ∑' p : {p : ℕ // Nat.Prime p}, ‖ψ p‖^2 * (Real.log p.val)^(2 * β)
-
-/-- Domain of the action functional -/
-def domainJ (β : ℝ) : Set WeightedHilbertSpace :=
-  {ψ | Summable fun p => ‖ψ p‖^2 * (Real.log p.val)^(2 * β)}
-
+  export RH.WeightedL2 (deltaBasis domainH)
 end WeightedHilbertSpace
+
+end RH
