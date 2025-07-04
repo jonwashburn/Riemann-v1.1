@@ -11,7 +11,7 @@ import RiemannHypothesis.Infrastructure.MissingLemmas
 
 namespace RiemannHypothesis
 
-open Complex Real RH.FredholmDeterminant RH.FredholmVanishingEigenvalueProof
+open Complex Real
 
 /-- The Riemann zeta function (using simplified definition) -/
 noncomputable def riemannZeta : ℂ → ℂ :=

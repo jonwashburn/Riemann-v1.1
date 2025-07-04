@@ -1,0 +1,25 @@
+# Ignore Lake build artifacts
+.lake/build/
+
+# Ignore compiled Lean object files
+*.olean
+*.ilean
+*.c
+*.c.hash
+*.setup.json
+*.trace
+
+# Ignore duplicate repos or files if any
+foundation_repo 2/
+src 2/
+Riemann_Recognition_Science 2.tex
+README 2.md
+LICENSE 2
+lakefile 2.lean
+lake-manifest 2.json
+lean-toolchain 2
+metadata 2.json
+verify 2.sh
+
+# Ignore MacOS files
+.DS_Store 

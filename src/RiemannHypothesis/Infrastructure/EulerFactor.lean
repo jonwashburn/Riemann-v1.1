@@ -1,4 +1,4 @@
-import Mathlib.Data.Nat.Prime.Basic
+import Mathlib.Data.Nat.Prime
 import Mathlib.Analysis.SpecialFunctions.Complex.Log
 import Mathlib.Topology.Algebra.InfiniteSum.Basic
 import RiemannHypothesis.Analysis.ExpBounds
