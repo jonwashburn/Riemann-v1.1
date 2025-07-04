@@ -1,5 +1,6 @@
 # Ignore Lake build artifacts
 .lake/build/
+.lake/
 
 # Ignore compiled Lean object files
 *.olean
@@ -8,6 +9,13 @@
 *.c.hash
 *.setup.json
 *.trace
+**/*.olean
+**/*.ilean
+
+# VS Code / Cursor
+*.log
+*.tmp
+/.lean_cache/
 
 # Ignore duplicate repos or files if any
 foundation_repo 2/
@@ -22,4 +30,4 @@ metadata 2.json
 verify 2.sh
 
 # Ignore MacOS files
-.DS_Store 
+.DS_Store
