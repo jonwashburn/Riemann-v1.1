@@ -27,6 +27,18 @@ noncomputable def ε : ℂ := φ - (1 : ℂ)
 /- Core algebraic identity used in Section 2 of the paper.  A full proof will
 be added later. -/
 lemma epsilon_mul_phi : ε * φ = (1 : ℂ) := by
-  sorry
+  -- Key fact: φ² = φ + 1, so φ - 1 = 1/φ
+  -- Therefore ε * φ = (φ - 1) * φ = φ² - φ = (φ + 1) - φ = 1
+  simp only [ε]
+  ring_nf
+  -- Use the defining property of the golden ratio
+  have h : (goldenRatio : ℝ) ^ 2 = goldenRatio + 1 := goldenRatio_sq
+  -- Transfer to complex numbers
+  have hc : (φ : ℂ) ^ 2 = φ + 1 := by
+    simp only [φ, sq]
+    rw [← Complex.ofReal_mul, ← Complex.ofReal_add, ← Complex.ofReal_one, h]
+  -- Now compute (φ - 1) * φ = φ² - φ = (φ + 1) - φ = 1
+  rw [sub_mul, one_mul, hc]
+  ring
 
 end RH.GoldenRatioBasics

@@ -19,13 +19,17 @@ noncomputable def evolutionEigenvalues (s : ℂ) : {p : ℕ // Nat.Prime p} → 
 /-- A diagonal operator with given eigenvalues -/
 noncomputable def DiagonalOperator (eigenvalues : {p : ℕ // Nat.Prime p} → ℂ)
     (h_bounded : ∃ C : ℝ, ∀ p, ‖eigenvalues p‖ ≤ C) : WeightedL2 →L[ℂ] WeightedL2 := by
-  -- TODO: provide full implementation.
-  exact sorry
+  -- The construction requires showing the pointwise multiplication
+  -- preserves the l² property and is continuous
+  sorry
 
 /-- The evolution operator from eigenvalues -/
 noncomputable def evolutionOperatorFromEigenvalues (s : ℂ) : WeightedL2 →L[ℂ] WeightedL2 := by
-  -- TODO: link to `DiagonalOperator` once implemented.
-  exact sorry
+  -- Apply DiagonalOperator with eigenvalues p^(-s)
+  -- The bound is 2^(Re s) for Re s > 0
+  apply DiagonalOperator (evolutionEigenvalues s)
+  -- We need Re s > 0 for convergence, but we don't have that hypothesis here
+  sorry
 
 /-- A(s) acts diagonally on basis vectors with eigenvalues p^{-s}. -/
 @[simp]

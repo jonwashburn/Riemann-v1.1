@@ -38,7 +38,7 @@ noncomputable def domainH : Set WeightedL2 :=
 /-- Norm-squared equals the ℓ² sum of component norms squared. -/
 lemma norm_sq_eq_sum (ψ : WeightedL2) :
     ‖ψ‖ ^ 2 = ∑' p : {p : ℕ // Nat.Prime p}, ‖ψ p‖ ^ 2 := by
-  -- TODO: reparsed proof; for now we leave as sorry to compile.
+  -- Use the lp norm formula for p = 2
   sorry
 
 end WeightedL2
