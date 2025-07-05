@@ -30,4 +30,9 @@ metadata 2.json
 verify 2.sh
 
 # Ignore MacOS files
+.DS_Store.lake/
+**/*.olean
+**/*.c
+**/*.ilean
+build/
 .DS_Store
