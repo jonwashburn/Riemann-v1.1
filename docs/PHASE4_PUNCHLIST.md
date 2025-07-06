@@ -35,3 +35,40 @@ Total todos : 18
 Completed   : 0
 Remaining   : 18
 ``` 
+
+open scoped Real
+
+-- Φ ≥ 0
+have hPhi : 0 < Phi x := by
+  -- numerator and denominator positive
+  ...
+
+-- define S(σ)
+def S (σ : ℝ) : ℝ := exp (-σ * Phi x)
+
+-- derivative lemma
+lemma deriv_S : deriv S = fun σ ↦ -Phi x * S σ := by
+  simpa using deriv_exp_mul_const ...
+
+-- monotone_on (0,∞)
+have h_mono : MonotoneOn (fun σ ↦ S σ) (Set.Icc (1/2) ⊤) := by
+  intro a ha b hb hlt
+  have hderiv_neg : ∀ t∈Set.Ioo a b, deriv S t < 0 := ...
+  exact real_analytic.strict_mono_of_deriv_neg hderiv_neg hlt 
+
+have bound : λ_max Kσ < 1 := by
+  have hR := rayleighQuotient_max_at_criticalLine x hx σ hσ
+  ...
+exact spectrum.not_mem_of_spectral_radius_lt_one bound 
+
+have h_holo_det : AnalyticOn ℂ (λ s, det2 (1 - K s)) Ω := ...
+have h_holo_zeta : AnalyticOn ℂ (λ s, (zeta s)⁻¹) Ω := ...
+have h_eq_on : EqOn ... (λ s, (zeta s)⁻¹) {s | 1 < s.re} := ...
+exact AnalyticOn.eqOn_of_eqOn_of_isConnected h_holo_det h_holo_zeta isConnected_halfStrip h_eq_on _ hs 
+
+have h_abs : summable fun p => ‖p ^ (-s : ℂ)‖ := ...
+have : ∏' p, Complex.exp (p ^ -s) = Complex.exp (∑' p, p ^ -s) ... 
+
+have h_fin : IsCompactOperator T := ...
+have h_sa  : IsSelfAdjoint T := ...
+exact IsSelfAdjoint.compact.discrete_spectrum h_sa h_fin 

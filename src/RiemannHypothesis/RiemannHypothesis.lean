@@ -2,6 +2,7 @@
 -- Using Recognition Science Framework
 
 import Mathlib
+import Mathlib.NumberTheory.ZetaFunction
 import RiemannHypothesis.Infrastructure.WeightedHilbertSpace
 import RiemannHypothesis.Infrastructure.ArithmeticHamiltonian
 import RiemannHypothesis.Infrastructure.FredholmDeterminant
@@ -12,11 +13,10 @@ import RiemannHypothesis.Infrastructure.SpectralTheory
 
 namespace RiemannHypothesis
 
-open Complex Real
+open Complex Real ZetaFunction
 
-/-- The Riemann zeta function (using simplified definition) -/
-noncomputable def riemannZeta : ℂ → ℂ :=
-  fun s => if 1 < s.re then ∑' n : ℕ+, (n : ℂ)^(-s) else 0  -- placeholder
+/-- The Riemann zeta function (using mathlib definition) -/
+noncomputable def riemannZeta : ℂ → ℂ := ZetaFunction.riemannZeta
 
 /-- The set of trivial zeros of the Riemann zeta function -/
 def trivialZeros : Set ℂ := {s | ∃ n : ℕ, s = -2 * (n + 1)}
@@ -60,7 +60,7 @@ theorem riemann_hypothesis :
           -- So we must have ζ(1-s) = 0
           -- But from Case 2, ζ(1-s) = 0 with Re(1-s) > 1/2 implies Re(1-s) = 1/2
           -- This contradicts our assumption that Re(1-s) > 1/2
-          have h_functional_eq : ζ s = 0 → ζ (1 - s) = 0 ∨
+          have h_functional_eq : riemannZeta s = 0 → riemannZeta (1 - s) = 0 ∨
               (2 : ℂ)^s * π^(s-1) * Complex.sin (π * s / 2) * Complex.Gamma (1 - s) = 0 := by
             intro h_zero
             -- This follows from the functional equation
@@ -82,7 +82,7 @@ theorem riemann_hypothesis :
             -- Since we assumed s ∉ trivialZeros, the prefactor is nonzero
             -- We defer the detailed analysis of these special functions
             sorry -- Gamma function and sin properties: prefactor ≠ 0 when s ∉ trivialZeros
-          have h_zeta_complement_zero : ζ (1 - s) = 0 := by
+          have h_zeta_complement_zero : riemannZeta (1 - s) = 0 := by
             apply (h_functional_eq hzero).resolve_right
             exact h_prefactor_nonzero
           -- Now apply Case 2 to 1-s
