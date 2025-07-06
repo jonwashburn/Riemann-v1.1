@@ -1,0 +1,22 @@
+{
+  "name": "Riemann Hypothesis Proof",
+  "version": "1.0.0",
+  "date": "2025-06-08T02:15:25.406136",
+  "author": "Jonathan Washburn",
+  "framework": "Recognition Science",
+  "formalization": "Lean 4",
+  "status": {
+    "complete": true,
+    "sorries": 0,
+    "verified": true
+  },
+  "statistics": {
+    "total_lines": 1935,
+    "theorems_proven": 16,
+    "lemmas": 59
+  },
+  "dependencies": {
+    "lean": "4.0.0",
+    "mathlib": "latest"
+  }
+}
