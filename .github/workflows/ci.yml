@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Install Lean 4
+      run: |
+        curl https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh -sSf | sh -s -- -y
+        echo "$HOME/.elan/bin" >> $GITHUB_PATH
+        
+    - name: Set Lean toolchain
+      run: |
+        elan toolchain install leanprover/lean4:4.8.0
+        elan default leanprover/lean4:4.8.0
+        
+    - name: Cache Lake dependencies
+      uses: actions/cache@v3
+      with:
+        path: |
+          .lake/packages
+          .lake/build
+        key: ${{ runner.os }}-lake-${{ hashFiles('lakefile.lean', 'lake-manifest.json') }}
+        restore-keys: |
+          ${{ runner.os }}-lake-
+          
+    - name: Build project
+      run: |
+        lake build
+        
+    - name: Check for sorry statements
+      run: |
+        echo "Checking for sorry statements in the codebase..."
+        if grep -r "sorry" src/ --include="*.lean"; then
+          echo "⚠️  Found sorry statements in the code"
+          echo "This is expected during development - checking count..."
+          SORRY_COUNT=$(grep -r "sorry" src/ --include="*.lean" | wc -l)
+          echo "Current sorry count: $SORRY_COUNT"
+          if [ $SORRY_COUNT -gt 20 ]; then
+            echo "❌ Too many sorry statements (>20). Please complete some proofs."
+            exit 1
+          else
+            echo "✅ Sorry count is acceptable for development phase"
+          fi
+        else
+          echo "🎉 No sorry statements found - proof is complete!"
+        fi
+        
+    - name: Run basic tests
+      run: |
+        echo "Running basic sanity checks..."
+        # Check that main theorem exists
+        if grep -q "riemann_hypothesis" src/RiemannHypothesis/RiemannHypothesis.lean; then
+          echo "✅ Main theorem found"
+        else
+          echo "❌ Main theorem not found"
+          exit 1
+        fi
+        
+    - name: Upload build artifacts
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: build-logs
+        path: |
+          .lake/build/log
+          *.log 

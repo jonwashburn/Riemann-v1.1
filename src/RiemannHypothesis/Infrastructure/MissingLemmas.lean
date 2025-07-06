@@ -23,8 +23,12 @@ noncomputable def det₂ {H : Type*} [NormedAddCommGroup H] [InnerProductSpace �
 /-- The operator A(s) = e^{-sH} acting as a function -/
 noncomputable def operatorA (s : ℂ) (ψ : WeightedHilbertSpace) : WeightedHilbertSpace :=
   -- Return the function p ↦ p^(-s) * ψ(p)
-  -- Implementation requires proper lp function coercion
-  sorry
+  fun p => (p.val : ℂ)^(-s) * ψ p
+
+/-- Helper lemma: operatorA applies pointwise multiplication -/
+lemma operatorA_apply (s : ℂ) (ψ : WeightedHilbertSpace) (p : {p : ℕ // Nat.Prime p}) :
+    operatorA s ψ p = (p.val : ℂ)^(-s) * ψ p := by
+  rfl
 
 -- Placeholder for missing lemmas that need to be implemented
 -- Each lemma should be properly defined with appropriate types

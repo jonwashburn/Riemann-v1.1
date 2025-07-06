@@ -1,0 +1,12 @@
+#!/bin/bash
+echo "Your changes are committed locally as 4d2a453"
+echo ""
+echo "To push to GitHub, please run these commands in a fresh terminal:"
+echo ""
+echo "cd /Users/jonathanwashburn/Desktop/Riemann-1.1"
+echo "cp -r repo repo_backup"
+echo "cd repo"
+echo "rm -rf .lake"
+echo "git push origin phase1-integration:main"
+echo ""
+echo "If that still fails, use GitHub Desktop or SourceTree to push the branch." 

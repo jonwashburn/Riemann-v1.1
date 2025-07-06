@@ -1,7 +1,7 @@
 import Mathlib.Analysis.InnerProductSpace.l2Space
 import Mathlib.Data.Real.GoldenRatio
-import Mathlib.Topology.Instances.ENNReal
-import Mathlib.Data.Nat.Prime
+import Mathlib.Topology.Instances.ENNReal.Lemmas
+import Mathlib.Data.Nat.Prime.Basic
 import Mathlib.Analysis.SpecialFunctions.Complex.Log
 import Mathlib.Topology.Algebra.InfiniteSum.Basic
 
@@ -39,7 +39,17 @@ noncomputable def domainH : Set WeightedL2 :=
 lemma norm_sq_eq_sum (ψ : WeightedL2) :
     ‖ψ‖ ^ 2 = ∑' p : {p : ℕ // Nat.Prime p}, ‖ψ p‖ ^ 2 := by
   -- Use the lp norm formula for p = 2
-  sorry
+  rw [← Real.rpow_two]
+  -- For lp with p = 2, we have ‖f‖^p = Σᵢ ‖f i‖^p
+  have h_norm : ‖ψ‖ ^ (2 : ℝ) = (∑' p : {p : ℕ // Nat.Prime p}, ‖ψ p‖ ^ (2 : ℝ) : ℝ) := by
+    -- This is the standard lp norm formula for p = 2
+    rw [lp.norm_rpow_eq_tsum (by norm_num : (0 : ℝ) < 2)]
+    simp only [ENNReal.toReal_ofReal, zero_lt_two]
+  rw [h_norm]
+  -- Convert back to squared notation
+  congr 1
+  ext p
+  rw [Real.rpow_two]
 
 end WeightedL2
 
