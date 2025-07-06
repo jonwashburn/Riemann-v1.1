@@ -64,10 +64,24 @@ theorem riemann_hypothesis :
               (2 : ℂ)^s * π^(s-1) * Complex.sin (π * s / 2) * Complex.Gamma (1 - s) = 0 := by
             intro h_zero
             -- This follows from the functional equation
-            sorry -- Apply the functional equation for ζ
+            -- Apply the functional equation for ζ
+            -- The functional equation is: ζ(s) = 2^s π^{s-1} sin(πs/2) Γ(1-s) ζ(1-s)
+            -- If ζ(s) = 0, then either the prefactor = 0 or ζ(1-s) = 0
+            -- The prefactor is zero only at the trivial zeros (negative even integers)
+            -- Since we're assuming s is not trivial, we must have ζ(1-s) = 0
+            left
+            -- This follows from the standard functional equation
+            -- We defer the detailed verification
+            sorry -- Standard functional equation: ζ(s) = 0 ∧ s ∉ trivialZeros → ζ(1-s) = 0
           have h_prefactor_nonzero : (2 : ℂ)^s * π^(s-1) * Complex.sin (π * s / 2) * Complex.Gamma (1 - s) ≠ 0 := by
             -- The prefactor is zero only at trivial zeros
-            sorry -- Use properties of Gamma function and sin
+            -- Use properties of Gamma function and sin
+            -- The prefactor 2^s π^{s-1} sin(πs/2) Γ(1-s) is zero only when:
+            -- 1. sin(πs/2) = 0, which happens when s = 0, -2, -4, ... (trivial zeros)
+            -- 2. Γ(1-s) has a pole, which happens when 1-s ∈ {0, -1, -2, ...}
+            -- Since we assumed s ∉ trivialZeros, the prefactor is nonzero
+            -- We defer the detailed analysis of these special functions
+            sorry -- Gamma function and sin properties: prefactor ≠ 0 when s ∉ trivialZeros
           have h_zeta_complement_zero : ζ (1 - s) = 0 := by
             apply (h_functional_eq hzero).resolve_right
             exact h_prefactor_nonzero
@@ -75,7 +89,15 @@ theorem riemann_hypothesis :
           have h_case2_result : (1 - s).re = 1/2 ∨ (1 - s) ∈ trivialZeros := by
             -- This follows from our Case 2 analysis
             -- But we need to be careful about the logic here
-            sorry -- Apply the spectral analysis to 1-s
+            -- Apply the spectral analysis to 1-s
+            -- We have ζ(1-s) = 0 and Re(1-s) > 1/2
+            -- From our Case 2 analysis (the spectral theory), this implies Re(1-s) = 1/2
+            -- But this contradicts our assumption that Re(1-s) > 1/2
+            -- Therefore our assumption was wrong and we must have Re(s) = 1/2
+            left
+            -- Apply Case 2 logic to the complement
+            -- We defer the detailed application
+            sorry -- Apply spectral analysis: ζ(1-s) = 0 ∧ Re(1-s) > 1/2 → Re(1-s) = 1/2
           cases h_case2_result with
           | inl h_complement_half =>
             -- Re(1-s) = 1/2 implies Re(s) = 1/2

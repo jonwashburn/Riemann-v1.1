@@ -116,7 +116,19 @@ theorem evolutionOperator_selfAdjoint_criticalPoint :
     -- p^(-1/2) is a positive real number, so it equals its complex conjugate
     have h_real : (p.val : ℂ)^(-(1/2 : ℂ)) ∈ Set.range Complex.ofReal := by
       -- p^(-1/2) = (p^(-1/2) : ℝ) when p is a positive real
-      sorry -- Standard result about real powers of positive reals
+      use (p.val : ℝ)^(-(1/2 : ℝ))
+      -- For positive real numbers, complex power equals real power when exponent is real
+      have h_pos : (0 : ℝ) < p.val := Nat.cast_pos.mpr (Nat.Prime.pos p.2)
+      rw [Complex.cpow_def_of_ne_zero (by simp [Ne.symm (ne_of_gt h_pos)])]
+      simp only [Complex.log_ofReal_of_pos h_pos]
+      simp only [Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im]
+      simp only [Complex.neg_re, Complex.neg_im, Complex.ofReal_re, Complex.ofReal_im]
+      simp only [mul_zero, zero_mul, sub_zero, add_zero, neg_zero]
+      rw [Complex.exp_ofReal_re, Complex.exp_ofReal_im]
+      simp only [Real.cos_zero, Real.sin_zero, mul_one, mul_zero]
+      rw [Complex.ofReal_inj]
+      rw [Real.exp_log h_pos]
+      simp [Real.rpow_def_of_pos h_pos]
     rw [← Complex.conj_eq_iff_re] at h_real
     exact h_real.symm
   -- Use the fact that diagonal operators with real eigenvalues are self-adjoint
@@ -125,7 +137,19 @@ theorem evolutionOperator_selfAdjoint_criticalPoint :
       ⟪x, evolutionOperatorFromEigenvalues (1/2 : ℂ) y⟫_ℂ := by
     intro x y
     -- Apply the diagonal structure and real eigenvalues
-    sorry -- Standard result for diagonal operators with real eigenvalues
+    -- For diagonal operators with real eigenvalues, self-adjointness follows directly
+    -- ⟨T x, y⟩ = Σ_p λ_p x(p) conj(y(p)) = Σ_p conj(λ_p) conj(x(p)) y(p) = ⟨x, T y⟩
+    -- when λ_p are real (so conj(λ_p) = λ_p)
+    simp only [inner_sum, inner_smul_left, inner_smul_right]
+    congr 1
+    ext p
+    simp only [evolutionOperatorFromEigenvalues]
+    -- Use the fact that eigenvalues are real
+    have h_real_eigenvalue : Complex.conj ((p.val : ℂ)^(-(1/2 : ℂ))) = (p.val : ℂ)^(-(1/2 : ℂ)) := by
+      exact (h_eigenvalues_real p).symm
+    rw [← h_real_eigenvalue]
+    rw [Complex.conj_mul]
+    ring
   exact h_diagonal_self_adjoint
 
 /-- Properties of the evolution operator on the critical line -/
@@ -147,10 +171,21 @@ theorem evolutionOperator_criticalLine_properties (t : ℝ) :
     rw [h_modulus]
     -- |p^(-it)| = 1 for real t
     have h_unit_modulus : ‖(p.val : ℂ)^(-t * I)‖ = 1 := by
-      sorry -- |p^(it)| = 1 for real t and positive real p
+      -- |p^(it)| = 1 for real t and positive real p
+      -- Use |z^w| = |z|^Re(w) * exp(-Im(w) * arg(z))
+      have h_pos : (0 : ℝ) < p.val := Nat.cast_pos.mpr (Nat.Prime.pos p.2)
+      rw [Complex.norm_cpow_of_pos h_pos]
+      simp only [Complex.mul_re, Complex.mul_im, Complex.I_re, Complex.I_im]
+      simp only [Complex.neg_re, Complex.neg_im, mul_zero, zero_mul, neg_zero]
+      simp only [Real.rpow_zero, one_mul]
     rw [h_unit_modulus, mul_one]
     -- |p^(-1/2)| = p^(-1/2) for positive real p
-    sorry -- Standard result for real powers
+    -- |p^(-1/2)| = p^(-1/2) for positive real p
+    have h_pos : (0 : ℝ) < p.val := Nat.cast_pos.mpr (Nat.Prime.pos p.2)
+    rw [Complex.norm_cpow_of_pos h_pos]
+    simp only [Complex.neg_re, Complex.ofReal_re, neg_neg]
+    rw [Real.rpow_neg (le_of_lt h_pos)]
+    simp
 
 /-- The Rayleigh quotient is maximized at the critical line -/
 theorem rayleighQuotient_max_at_criticalLine (x : WeightedL2) (h_nonzero : x ≠ 0) :
@@ -329,14 +364,26 @@ theorem eigenvalue_one_only_on_critical_line :
       simp
     -- Use |p^s| = p^{Re(s)} for positive real p
     have h_modulus_formula : ‖(p₀.val : ℂ)^s‖ = (p₀.val : ℝ)^s.re := by
-      sorry -- Standard formula for complex powers
+      -- Standard formula for complex powers: |z^w| = |z|^Re(w) when z > 0
+      have h_pos : (0 : ℝ) < p₀.val := Nat.cast_pos.mpr (Nat.Prime.pos p₀.2)
+      exact Complex.norm_cpow_of_pos h_pos
     rw [h_modulus_formula] at h_modulus
     -- Since p₀ ≥ 2 and p₀^{Re(s)} = 1, we need Re(s) = 0
     have h_prime_ge_two : 2 ≤ p₀.val := Nat.Prime.two_le p₀.2
     have h_power_eq_one : (p₀.val : ℝ)^s.re = 1 := by
       simp [h_modulus]
     -- If a^x = 1 for a > 1, then x = 0
-    sorry -- Use logarithm properties
+    -- Use logarithm properties: if a^x = 1 for a > 1, then x = 0
+    have h_log_eq : Real.log (p₀.val : ℝ)^s.re = Real.log 1 := by
+      rw [← h_power_eq_one]
+    rw [Real.log_rpow (le_of_lt (Nat.cast_pos.mpr (Nat.Prime.pos p₀.2)))] at h_log_eq
+    rw [Real.log_one] at h_log_eq
+    have h_log_pos : 0 < Real.log (p₀.val : ℝ) := by
+      apply Real.log_pos
+      rw [Nat.one_lt_cast]
+      exact Nat.Prime.one_lt p₀.2
+    have h_mult_zero : s.re * Real.log (p₀.val : ℝ) = 0 := h_log_eq
+    exact eq_div_of_mul_eq_right (ne_of_gt h_log_pos) h_mult_zero
 
   -- But this contradicts our assumption that Re(s) ≠ 1/2
   -- Actually, we showed Re(s) = 0, but we assumed Re(s) ≠ 1/2
