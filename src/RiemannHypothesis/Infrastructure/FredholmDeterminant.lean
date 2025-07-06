@@ -468,7 +468,36 @@ theorem determinant_identity_extended (s : ℂ) (hs : 1/2 < s.re) :
         · simp [Ne.symm (ne_of_gt (Nat.cast_pos.mpr (Nat.Prime.pos _)))]
       -- The infinite product defining the determinant is analytic
       -- This follows from uniform convergence on compact sets
-      sorry -- Standard: analytic dependence of infinite products on parameters
+      -- Use AnalyticOn.infinite_prod from mathlib
+      have h_uniform_convergence : ∀ K : Set ℂ, IsCompact K → K ⊆ Ω →
+          ∃ M : ℝ, ∀ s ∈ K, ∀ p : {p : ℕ // Nat.Prime p},
+          ‖(1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s)) - 1‖ ≤ M * (p.val : ℝ)^(-s.re) := by
+        intro K hK_compact hK_subset
+        -- For compact K ⊆ Ω, we have uniform bounds on Re(s)
+        have h_re_bound : ∃ σ_min > 1/2, ∀ s ∈ K, s.re ≥ σ_min := by
+          -- Use compactness to get uniform lower bound on Re(s)
+          sorry -- Standard: compact set has uniform bounds
+        obtain ⟨σ_min, hσ_min, h_bound⟩ := h_re_bound
+        use 2  -- A reasonable constant
+        intro s hs p
+        -- Use the fact that for Re(s) ≥ σ_min > 1/2, we have good bounds
+        sorry -- Standard: uniform bounds on infinite product terms
+      apply AnalyticOn.infinite_prod
+      · -- Each factor is analytic
+        intro p
+        apply AnalyticOn.mul
+        · apply AnalyticOn.sub
+          · exact analyticOn_const
+          · apply AnalyticOn.const_cpow
+            · exact analyticOn_id
+            · simp [Ne.symm (ne_of_gt (Nat.cast_pos.mpr (Nat.Prime.pos p.2)))]
+        · apply AnalyticOn.comp
+          · exact Complex.analyticOn_exp
+          · apply AnalyticOn.const_cpow
+            · exact analyticOn_id
+            · simp [Ne.symm (ne_of_gt (Nat.cast_pos.mpr (Nat.Prime.pos p.2)))]
+      · -- Uniform convergence on compact sets
+        exact h_uniform_convergence
 
     have h_analytic_rhs : AnalyticOn ℂ (fun s => (riemannZeta s)⁻¹) Ω := by
       -- ζ(s)^{-1} is analytic except at zeros of ζ

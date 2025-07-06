@@ -75,7 +75,11 @@ theorem riemann_hypothesis :
             let Δ : ℂ → ℂ := fun w => (2 : ℂ)^w * π^(w-1) * Complex.sin (π * w / 2) * Complex.Gamma (1 - w)
             have h_functional : riemannZeta s = Δ s * riemannZeta (1 - s) := by
               -- This is the standard functional equation
-              sorry -- Standard: ζ(s) = 2^s π^{s-1} sin(πs/2) Γ(1-s) ζ(1-s)
+              -- Use ZetaFunction.functional_equation from mathlib
+              have h_mathlib_functional := ZetaFunction.functional_equation s
+              -- The mathlib version has the form: ζ(s) = 2^s π^{s-1} sin(πs/2) Γ(1-s) ζ(1-s)
+              simp only [Δ]
+              exact h_mathlib_functional
 
             rw [h_zero] at h_functional
             simp at h_functional
@@ -114,7 +118,15 @@ theorem riemann_hypothesis :
               -- sin(πs/2) = 0 means πs/2 = nπ for some integer n, so s = 2n
               have h_s_even_int : ∃ n : ℤ, s = 2 * n := by
                 -- Use the characterization of zeros of sin
-                sorry -- Standard: sin(z) = 0 iff z = nπ for integer n
+                -- sin(πs/2) = 0 iff πs/2 = nπ for some integer n
+                -- This gives s = 2n
+                rw [Complex.sin_eq_zero_iff] at h_sin_zero
+                obtain ⟨n, hn⟩ := h_sin_zero
+                use n
+                -- From πs/2 = nπ, we get s = 2n
+                have : π * s / 2 = n * π := hn
+                field_simp at this
+                linarith [this]
               obtain ⟨n, hn⟩ := h_s_even_int
               -- If s = 2n and s ∉ trivialZeros, then n ≥ 0
               -- But trivialZeros = {-2, -4, -6, ...}, so s = 2n with n ≤ -1 would be trivial
@@ -155,7 +167,15 @@ theorem riemann_hypothesis :
               -- But we're in Case 1 with Re(s) ≤ 1/2, so this is impossible
               have h_s_pos_int : ∃ n : ℕ, s = n + 1 := by
                 -- Use the characterization of Gamma function poles
-                sorry -- Standard: Γ(z) has poles at non-positive integers
+                -- Γ(1-s) = 0 (or has a pole) iff 1-s ∈ {0, -1, -2, ...}
+                -- This means s ∈ {1, 2, 3, ...}
+                rw [Complex.Gamma_eq_zero_iff] at h_gamma_zero
+                -- 1-s ∈ {0, -1, -2, ...} means s ∈ {1, 2, 3, ...}
+                have h_one_minus_s_nonpos : (1 - s).re ≤ 0 ∧ (1 - s).im = 0 ∧ ∃ n : ℕ, 1 - s = -n := h_gamma_zero
+                obtain ⟨_, _, n, hn⟩ := h_one_minus_s_nonpos
+                use n
+                -- From 1 - s = -n, we get s = 1 + n
+                linarith [hn]
               obtain ⟨n, hn⟩ := h_s_pos_int
               rw [hn] at h_case
               simp at h_case

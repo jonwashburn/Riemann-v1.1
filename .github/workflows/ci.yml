@@ -37,6 +37,29 @@ jobs:
       run: |
         lake build
         
+    - name: Strict build check (Phase 5)
+      if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[no-sorry]')
+      run: |
+        echo "Running strict Phase 5 build checks..."
+        echo "1. Verifying lake manifest exists..."
+        if [ ! -f "lake-manifest.json" ]; then
+          echo "❌ lake-manifest.json missing"
+          exit 1
+        fi
+        echo "2. Running full build..."
+        lake build --verbose
+        echo "3. Checking for no-sorry compliance..."
+        if command -v lake exe Scripts.checkNoSorry >/dev/null 2>&1; then
+          lake exe Scripts.checkNoSorry
+        else
+          echo "⚠️  Scripts.checkNoSorry not available, using grep fallback"
+          if grep -r "sorry" src/ --include="*.lean"; then
+            echo "❌ Sorry statements found in strict mode"
+            exit 1
+          fi
+        fi
+        echo "✅ Strict build checks passed!"
+        
     - name: Check for sorry statements
       run: |
         echo "Checking for sorry statements in the codebase..."
