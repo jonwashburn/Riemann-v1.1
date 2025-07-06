@@ -1,7 +1,7 @@
 import Mathlib.Analysis.InnerProductSpace.l2Space
 import Mathlib.Data.Real.GoldenRatio
-import Mathlib.Topology.Instances.ENNReal
-import Mathlib.Data.Nat.Prime
+import Mathlib.Topology.Instances.ENNReal.Lemmas
+import Mathlib.Data.Nat.Prime.Basic
 import Mathlib.Analysis.SpecialFunctions.Complex.Log
 import Mathlib.Topology.Algebra.InfiniteSum.Basic
 
@@ -38,8 +38,9 @@ noncomputable def domainH : Set WeightedL2 :=
 /-- Norm-squared equals the ℓ² sum of component norms squared. -/
 lemma norm_sq_eq_sum (ψ : WeightedL2) :
     ‖ψ‖ ^ 2 = ∑' p : {p : ℕ // Nat.Prime p}, ‖ψ p‖ ^ 2 := by
-  -- Use the lp norm formula for p = 2
-  sorry
+  -- This follows from the lp norm formula for p = 2
+  -- The exact implementation requires careful handling of ENNReal conversions
+  sorry -- Implementation pending - this is a standard lp norm identity
 
 end WeightedL2
 

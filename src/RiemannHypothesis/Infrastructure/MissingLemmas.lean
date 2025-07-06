@@ -1,4 +1,5 @@
 import Mathlib
+import Mathlib.Analysis.InnerProductSpace.l2Space
 import RiemannHypothesis.Infrastructure.WeightedHilbertSpace
 import RiemannHypothesis.Infrastructure.ArithmeticHamiltonian
 
@@ -22,6 +23,7 @@ noncomputable def det₂ {H : Type*} [NormedAddCommGroup H] [InnerProductSpace �
 /-- The operator A(s) = e^{-sH} acting as a function -/
 noncomputable def operatorA (s : ℂ) (ψ : WeightedHilbertSpace) : WeightedHilbertSpace :=
   -- Return the function p ↦ p^(-s) * ψ(p)
+  -- Implementation requires proper lp function coercion
   sorry
 
 -- Placeholder for missing lemmas that need to be implemented
