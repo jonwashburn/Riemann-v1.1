@@ -476,7 +476,12 @@ lemma fredholm_determinant_continuous :
           ‖∏ p : {p : ℕ // Nat.Prime p ∧ p.val ≤ N}, (1 - (p.val : ℂ)^(-s₀)) * Complex.exp ((p.val : ℂ)^(-s₀)) -
            fredholmDet2Diagonal (evolutionEigenvalues s₀)‖ := by
         -- Standard triangle inequality for three terms
-        sorry -- Triangle inequality application
+        -- Apply triangle inequality: ‖a - c‖ ≤ ‖a - b‖ + ‖b - c‖
+        apply le_trans (norm_sub_le _ _)
+        apply add_le_add
+        · apply le_trans (norm_sub_le _ _)
+          exact le_refl _
+        · exact le_refl _
 
       -- Apply our bounds
       have h_bound1 : ‖fredholmDet2Diagonal (evolutionEigenvalues s) -
@@ -689,7 +694,17 @@ theorem determinant_identity_extended (s : ℂ) (hs : 1/2 < s.re) :
         -- Since σ_min + 1/4 > 1/2, we have (p.val : ℝ)^(-(σ_min + 1/4)) ≤ p^{-1/2}
         exact le_trans h_final_bound (by
           simp [Real.rpow_neg (le_of_lt (Nat.cast_pos.mpr (Nat.Prime.pos p.2)))]
-          sorry -- Standard bound using σ_min + 1/4 > 1/2
+          -- Since σ_min + 1/4 > 1/2, we have -(σ_min + 1/4) < -1/2
+          -- Therefore p^{-(σ_min + 1/4)} ≤ p^{-1/2} ≤ 2^{-1/2} < 1
+          -- The bound 2 * (p^{-(σ_min + 1/4)})^2 ≤ 2 * (2^{-1/2})^2 = 2 * 2^{-1} = 1
+          have h_exp_bound : -(σ_min + 1/4) < -1/2 := by linarith [hσ_min]
+          have h_pow_bound : (p.val : ℝ)^(-(σ_min + 1/4)) ≤ (2 : ℝ)^(-1/2) := by
+            apply Real.rpow_le_rpow_of_exponent_nonpos
+            · exact Nat.one_le_cast.mpr (Nat.Prime.one_lt p.2).le
+            · exact Nat.cast_le.mpr (Nat.Prime.two_le p.2)
+            · linarith [h_exp_bound]
+          norm_num
+          exact mul_le_mul_of_nonneg_left (pow_le_pow_right (le_of_lt (Real.sqrt_pos.mpr (by norm_num))) h_pow_bound) (by norm_num)
         )
       apply AnalyticOn.infinite_prod
       · -- Each factor is analytic

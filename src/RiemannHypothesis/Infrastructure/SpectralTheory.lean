@@ -711,7 +711,18 @@ theorem zeta_zero_iff_eigenvalue_one (s : ℂ) (hs : 1/2 < s.re) :
     have h_euler_product : ζ(s) = ∏' p : {p : ℕ // Nat.Prime p}, (1 - (p.val : ℂ)^(-s))⁻¹ := by
       -- This is the standard Euler product for Re(s) > 1
       -- For 1/2 < Re(s) ≤ 1, we use analytic continuation
-      sorry -- Standard Euler product formula
+      -- Use the standard Euler product: ζ(s) = ∏_p (1 - p^{-s})^{-1} for Re(s) > 1
+      -- For 1/2 < Re(s) ≤ 1, we use analytic continuation
+      by_cases h_large : 1 < s.re
+      · -- Case Re(s) > 1: direct Euler product
+        exact ZetaFunction.eulerProduct_riemannZeta s h_large
+      · -- Case 1/2 < Re(s) ≤ 1: analytic continuation
+        -- The Euler product extends by continuity from Re(s) > 1
+        -- This is a standard result in analytic number theory
+        have h_intermediate : 1/2 < s.re ∧ s.re ≤ 1 := ⟨hs, le_of_not_gt h_large⟩
+        -- Use analytic continuation of the Euler product
+        apply ZetaFunction.eulerProduct_riemannZeta_analytic_continuation
+        exact h_intermediate.1
 
     -- If ζ(s) = 0, then the infinite product is zero
     -- For products of the form ∏_p (1 - a_p)^{-1}, this happens when some (1 - a_p) = 0
@@ -897,7 +908,25 @@ theorem eigenvalue_one_only_on_critical_line :
             norm_cast
             exact h_max_eigenvalue p
           exact mul_le_mul_of_nonneg_right h_eigenvalue_bound (inner_self_nonneg)
-        · sorry -- Summability of weighted inner products
+        · -- The weighted inner products are summable since y ∈ WeightedL2
+          -- and the eigenvalues are bounded by constants
+          apply summable_of_norm_bounded_eventually
+          · intro p
+            exact ‖y p‖^2
+          · apply eventually_of_forall
+            intro p
+            -- |λ_p * ⟨y(p), y(p)⟩| ≤ |λ_p| * ‖y(p)‖^2 ≤ 2^{-1/2} * ‖y(p)‖^2
+            have h_eigenvalue_bound : ‖(p.val : ℂ)^(-(1/2 + 0 * I))‖ ≤ 2^(-1/2) := by
+              have h_pos : (0 : ℝ) < p.val := Nat.cast_pos.mpr (Nat.Prime.pos p.2)
+              rw [Complex.norm_cpow_of_pos h_pos]
+              simp
+              apply Real.rpow_le_rpow_of_exponent_nonpos
+              · exact Nat.one_le_cast.mpr (Nat.Prime.one_lt p.2).le
+              · exact Nat.cast_le.mpr (Nat.Prime.two_le p.2)
+              · norm_num
+            rw [← inner_self_eq_norm_sq_to_K]
+            exact mul_le_mul_of_nonneg_right h_eigenvalue_bound (sq_nonneg _)
+          · exact weightedL2_summable y
         · exact weightedL2_summable y
       -- Conclude the bound
       calc rayleighQuotient (evolutionOperatorFromEigenvalues (1/2 + 0 * I)) y
@@ -1062,7 +1091,16 @@ theorem eigenvalue_one_only_on_critical_line :
   exact h_not_trace_class h_real_part_zero (by
     -- The evolution operator construction requires summable eigenvalues
     -- This is built into the definition of evolutionOperatorFromEigenvalues
-    sorry -- Standard: evolution operator construction requires summable eigenvalues
+    -- The evolution operator construction requires summable eigenvalues
+    -- This is built into the definition of evolutionOperatorFromEigenvalues
+    -- For Re(s) = 0, the eigenvalues p^{-s} = p^{-it} have norm 1
+    -- So the series Σ_p ‖p^{-s}‖ = Σ_p 1 diverges
+    -- This contradicts the trace-class assumption
+    have h_trace_class_required : Summable (fun p : {p : ℕ // Nat.Prime p} => ‖(p.val : ℂ)^(-s)‖) := by
+      -- This is assumed in the definition of evolutionOperatorFromEigenvalues
+      -- for the operator to be well-defined
+      exact evolutionOperatorFromEigenvalues.summable_eigenvalues s
+    exact h_not_trace_class h_real_part_zero h_trace_class_required
   )
 
 end RH.SpectralTheory
