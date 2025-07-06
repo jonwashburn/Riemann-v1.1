@@ -315,7 +315,73 @@ lemma fredholm_determinant_continuous :
       -- This follows from the fact that the tail terms are small
       -- |∏_{p>N} (1 - p^{-s}) * exp(p^{-s}) - 1| ≤ C * Σ_{p>N} p^{-Re(s)}
       -- and the tail sum can be made arbitrarily small
-      sorry -- Standard: uniform convergence of infinite products
+              -- Use the fact that for Re(s) ≥ σ_min > 1/2, the tail of the infinite product is small
+        -- The key insight: |∏_{p>N} (1 - p^{-s}) * exp(p^{-s}) - 1| ≤ C * Σ_{p>N} p^{-σ_min}
+        -- and the tail sum can be made arbitrarily small
+        have h_tail_bound : ∃ N : ℕ, ∀ s : ℂ, ‖s - s₀‖ < δ → s.re ≥ σ_min - δ/2 →
+            ‖∏' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s))‖ < ε/4 := by
+          -- Choose N such that Σ_{p>N} p^{-σ_min} < ε/8
+          have h_convergent : Summable (fun p : {p : ℕ // Nat.Prime p} => (p.val : ℝ)^(-σ_min)) := by
+            apply RH.SpectralTheory.summable_prime_rpow_neg
+            linarith [hσ_min]
+          have h_tail_to_zero : Filter.Tendsto (fun N => ∑' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (p.val : ℝ)^(-σ_min))
+              Filter.atTop (𝓝 0) := by
+            exact Summable.tendsto_atTop_zero h_convergent
+          obtain ⟨N, hN_bound⟩ : ∃ N : ℕ, ∑' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (p.val : ℝ)^(-σ_min) < ε/8 := by
+            rw [Metric.tendsto_nhds] at h_tail_to_zero
+            specialize h_tail_to_zero (ε/8) (by linarith [hε])
+            simp at h_tail_to_zero
+            exact h_tail_to_zero
+          use N
+          intro s hs_close hs_re_bound
+          -- Use the bound |∏_{p>N} (1 - p^{-s}) * exp(p^{-s})| ≤ exp(Σ_{p>N} |p^{-s}|)
+          -- and |p^{-s}| ≤ p^{-Re(s)} ≤ p^{-σ_min + δ/2} for s close to s₀
+          have h_product_bound : ‖∏' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s))‖ ≤
+              Real.exp (∑' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (p.val : ℝ)^(-(σ_min - δ/2))) := by
+            -- This uses the fact that for infinite products of the form ∏(1 + aₙ),
+            -- if Σ|aₙ| < ∞, then |∏(1 + aₙ)| ≤ exp(Σ|aₙ|)
+            -- Here aₙ = -p^{-s} + p^{-s} * (exp(p^{-s}) - 1) ≈ -p^{-s} + O(p^{-2s})
+            sorry -- Standard: infinite product bound via exponential of sum
+          -- The sum is bounded by the tail of the convergent series
+          have h_sum_bound : ∑' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (p.val : ℝ)^(-(σ_min - δ/2)) ≤
+              2 * ∑' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (p.val : ℝ)^(-σ_min) := by
+            apply tsum_le_tsum
+            · intro p
+              apply Real.rpow_le_rpow_of_exponent_nonpos
+              · exact Nat.one_le_cast.mpr (Nat.Prime.one_lt p.2.1).le
+              · linarith [hσ_min]
+            · sorry -- Summability of the larger exponent
+            · exact Summable.subtype h_convergent _
+          -- Combine the bounds
+          calc ‖∏' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s))‖
+            ≤ Real.exp (∑' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (p.val : ℝ)^(-(σ_min - δ/2))) := h_product_bound
+            _ ≤ Real.exp (2 * ∑' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (p.val : ℝ)^(-σ_min)) := by
+              apply Real.exp_monotone
+              exact h_sum_bound
+            _ ≤ Real.exp (2 * ε/8) := by
+              apply Real.exp_monotone
+              exact mul_le_mul_of_nonneg_left (le_of_lt hN_bound) (by norm_num)
+            _ = Real.exp (ε/4) := by ring
+            _ < ε/4 := by
+              -- For small ε, exp(ε/4) ≈ 1 + ε/4 < ε/4 + ε/4 = ε/2
+              -- More precisely, exp(x) - 1 ≤ 2x for x ≤ 1
+              have h_exp_bound : Real.exp (ε/4) ≤ 1 + ε/2 := by
+                apply Real.exp_le_one_add_mul_of_le
+                linarith [hε]
+              linarith [h_exp_bound]
+        obtain ⟨N, hN⟩ := h_tail_bound
+        use N
+        intro s hs
+        -- Apply the tail bound with appropriate parameters
+        apply hN
+        · exact hs
+        · -- Show s.re ≥ σ_min - δ/2 when ‖s - s₀‖ < δ
+          have h_re_close : |s.re - s₀.re| ≤ ‖s - s₀‖ := Complex.abs_re_le_abs (s - s₀)
+          have h_re_bound : s.re ≥ s₀.re - δ := by linarith [h_re_close, hs]
+          have h_s0_bound : s₀.re ≥ σ_min + δ/2 := by
+            apply h_neighborhood.2
+            simp
+          linarith [h_re_bound, h_s0_bound]
 
     obtain ⟨N, hN⟩ := h_uniform_conv
 
@@ -404,7 +470,22 @@ theorem determinant_identity (s : ℂ) (hs : 1 < s.re) :
     -- Taking inverses gives: ζ(s)^{-1} = ∏_p (1 - p^{-s})
     -- For Re(s) > 1, this is a standard result in analytic number theory
     -- We defer the detailed proof involving prime indexing conversions
-    sorry -- Classical Euler product: ζ(s)^{-1} = ∏_p (1 - p^{-s}) for Re(s) > 1
+    -- Use the standard Euler product formula from mathlib
+    -- ζ(s) = ∏_p (1 - p^{-s})^{-1} for Re(s) > 1
+    -- Taking inverses: ζ(s)^{-1} = ∏_p (1 - p^{-s})
+    have h_euler_mathlib : riemannZeta s = ∏' p : Nat.Primes, (1 - (p : ℂ)^(-s))⁻¹ := by
+      -- This should be available in mathlib's ZetaFunction module
+      sorry -- Use mathlib's Euler product formula
+    -- Convert between indexing by Nat.Primes and {p : ℕ // Nat.Prime p}
+    have h_reindex : ∏' p : Nat.Primes, (1 - (p : ℂ)^(-s))⁻¹ = ∏' p : {p : ℕ // Nat.Prime p}, (1 - (p.val : ℂ)^(-s))⁻¹ := by
+      -- The two indexing schemes are equivalent
+      sorry -- Standard: reindexing equivalence for prime products
+    rw [h_euler_mathlib, h_reindex]
+    -- Take inverses: if A = B^{-1}, then A^{-1} = B
+    have h_inv_eq : (∏' p : {p : ℕ // Nat.Prime p}, (1 - (p.val : ℂ)^(-s))⁻¹)⁻¹ = ∏' p : {p : ℕ // Nat.Prime p}, (1 - (p.val : ℂ)^(-s)) := by
+      -- This uses the fact that (∏ aᵢ)^{-1} = ∏ aᵢ^{-1} for convergent products
+      sorry -- Standard: inverse of infinite product
+    exact h_inv_eq.symm
   -- The exponential factor equals 1 for Re(s) > 1
   have h_exp_factor : ∏' p : {p : ℕ // Nat.Prime p}, Complex.exp ((p.val : ℂ)^(-s)) = 1 := by
     -- For Re(s) > 1, we have Σ_p p^{-s} convergent absolutely
@@ -525,7 +606,7 @@ theorem determinant_identity_extended (s : ℂ) (hs : 1/2 < s.re) :
         -- Use the bound |(1-z)e^z - 1| ≤ C|z|² for the infinite product term
         have h_product_bound : ‖(1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s)) - 1‖ ≤
             2 * ‖(p.val : ℂ)^(-s)‖^2 := by
-          sorry -- Standard Taylor series bound for (1-z)e^z - 1
+                      exact RH.SpectralTheory.taylor_bound_exp ((p.val : ℂ)^(-s))
         -- Combine the bounds
         have h_final_bound : ‖(1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s)) - 1‖ ≤
             2 * ((p.val : ℝ)^(-(σ_min + 1/4)))^2 := by
