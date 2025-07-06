@@ -39,7 +39,66 @@ theorem riemann_hypothesis :
       -- must lie exactly on the critical line
       exact Or.inl (by
         -- Use analytic continuation and the functional equation
-        sorry -- This requires the completed analytic continuation theory
+        -- The functional equation relates ζ(s) to ζ(1-s):
+        -- ζ(s) = 2^s π^{s-1} sin(πs/2) Γ(1-s) ζ(1-s)
+        -- If ζ(s) = 0 for some s with Re(s) ≤ 1/2, then either:
+        -- 1. s is a trivial zero (ruled out by assumption)
+        -- 2. ζ(1-s) = 0 for some 1-s with Re(1-s) ≥ 1/2
+        -- 3. Or Re(s) = 1/2 exactly
+
+        -- Since we're in Case 1 with Re(s) ≤ 1/2, we have Re(1-s) ≥ 1/2
+        have h_complement_ge_half : (1 - s).re ≥ 1/2 := by
+          simp [Complex.sub_re, Complex.one_re]
+          linarith [h_case]
+
+        -- If Re(1-s) > 1/2, then by our spectral analysis (Case 2),
+        -- ζ(1-s) = 0 implies Re(1-s) = 1/2, which gives Re(s) = 1/2
+        by_cases h_complement_gt_half : (1 - s).re > 1/2
+        · -- Case Re(1-s) > 1/2: use Case 2 analysis
+          -- By the functional equation, ζ(s) = 0 implies ζ(1-s) = 0 or the prefactor = 0
+          -- The prefactor 2^s π^{s-1} sin(πs/2) Γ(1-s) = 0 only at trivial zeros
+          -- So we must have ζ(1-s) = 0
+          -- But from Case 2, ζ(1-s) = 0 with Re(1-s) > 1/2 implies Re(1-s) = 1/2
+          -- This contradicts our assumption that Re(1-s) > 1/2
+          have h_functional_eq : ζ s = 0 → ζ (1 - s) = 0 ∨
+              (2 : ℂ)^s * π^(s-1) * Complex.sin (π * s / 2) * Complex.Gamma (1 - s) = 0 := by
+            intro h_zero
+            -- This follows from the functional equation
+            sorry -- Apply the functional equation for ζ
+          have h_prefactor_nonzero : (2 : ℂ)^s * π^(s-1) * Complex.sin (π * s / 2) * Complex.Gamma (1 - s) ≠ 0 := by
+            -- The prefactor is zero only at trivial zeros
+            sorry -- Use properties of Gamma function and sin
+          have h_zeta_complement_zero : ζ (1 - s) = 0 := by
+            apply (h_functional_eq hzero).resolve_right
+            exact h_prefactor_nonzero
+          -- Now apply Case 2 to 1-s
+          have h_case2_result : (1 - s).re = 1/2 ∨ (1 - s) ∈ trivialZeros := by
+            -- This follows from our Case 2 analysis
+            -- But we need to be careful about the logic here
+            sorry -- Apply the spectral analysis to 1-s
+          cases h_case2_result with
+          | inl h_complement_half =>
+            -- Re(1-s) = 1/2 implies Re(s) = 1/2
+            simp [Complex.sub_re, Complex.one_re] at h_complement_half
+            linarith [h_complement_half]
+          | inr h_complement_trivial =>
+            -- (1-s) is a trivial zero, but this is impossible for Re(1-s) > 1/2
+            have h_trivial_negative : ∀ t ∈ trivialZeros, t.re < 0 := by
+              intro t ht
+              simp only [trivialZeros] at ht
+              obtain ⟨n, hn⟩ := ht
+              rw [hn]
+              simp [Complex.neg_re, Complex.mul_re]
+              norm_num
+            have h_complement_negative : (1 - s).re < 0 := h_trivial_negative (1 - s) h_complement_trivial
+            linarith [h_complement_negative, h_complement_gt_half]
+
+        · -- Case Re(1-s) = 1/2: then Re(s) = 1/2 directly
+          push_neg at h_complement_gt_half
+          have h_complement_eq_half : (1 - s).re = 1/2 := by
+            linarith [h_complement_ge_half, h_complement_gt_half]
+          simp [Complex.sub_re, Complex.one_re] at h_complement_eq_half
+          linarith [h_complement_eq_half]
       )
 
   -- Case 2: Re(s) > 1/2
