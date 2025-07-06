@@ -229,7 +229,45 @@ lemma evolutionOperator_continuous :
       -- Apply uniform continuity on the finite set
       -- Since each function is continuous and we have finitely many,
       -- their sum is continuous
-      sorry -- Standard: finite sum of continuous functions is continuous
+      -- Use the fact that finite sums of continuous functions are continuous
+      -- We have finitely many primes p ≤ N, so we can use induction
+      have h_finite : Finite {p : ℕ // Nat.Prime p ∧ p.val ≤ N} := by
+        apply Set.Finite.to_subtype
+        apply Set.Finite.subset (Nat.finite_setOf_prime_le N)
+        intro p hp
+        exact hp.2
+      -- Apply continuity of finite sums
+      apply Metric.continuousAt_iff.mp
+      intro ε' hε'
+      -- Since we have finitely many terms, we can use ε/n for each term
+      let n := Fintype.card {p : ℕ // Nat.Prime p ∧ p.val ≤ N}
+      have hn_pos : 0 < n := by
+        apply Fintype.card_pos
+      -- Each term is continuous, so we can find δ_p for each p
+      have h_each_delta : ∀ p : {p : ℕ // Nat.Prime p ∧ p.val ≤ N}, ∃ δ_p > 0,
+          ∀ s : ℂ, ‖s - s₀‖ < δ_p → ‖(p.val : ℂ)^(-s) - (p.val : ℂ)^(-s₀)‖ < ε' / n := by
+        intro p
+        rw [Metric.continuousAt_iff] at h_each_continuous
+        specialize h_each_continuous p (ε' / n) (by simp [hε', hn_pos])
+        exact h_each_continuous
+      -- Take the minimum of all δ_p
+      choose δ_fun hδ_pos hδ_bound using h_each_delta
+      let δ := Finset.inf' Finset.univ (by simp) δ_fun
+      use δ
+      constructor
+      · apply Finset.lt_inf'_iff.mpr
+        intro p _
+        exact hδ_pos p
+      · intro s hs
+        -- Sum the bounds
+        calc ∑ p : {p : ℕ // Nat.Prime p ∧ p.val ≤ N}, ‖(p.val : ℂ)^(-s) - (p.val : ℂ)^(-s₀)‖
+          ≤ ∑ p : {p : ℕ // Nat.Prime p ∧ p.val ≤ N}, ε' / n := by
+            apply Finset.sum_le_sum
+            intro p _
+            apply hδ_bound
+            exact lt_of_lt_of_le hs (Finset.inf'_le _ _)
+          _ = n * (ε' / n) := by simp
+          _ = ε' := by field_simp
 
     obtain ⟨δ, hδ_pos, hδ⟩ := h_finite_continuous
 
@@ -503,7 +541,10 @@ theorem determinant_identity (s : ℂ) (hs : 1 < s.re) :
         intro p
         exact le_refl _
       · -- Use convergence of Σ p^{-Re(s)} for Re(s) > 1
-        sorry -- Standard convergence of prime zeta series
+        -- Use the fact that Σ_p p^{-Re(s)} converges for Re(s) > 1
+        have h_re_bound : 1 < s.re := hs
+        apply RH.SpectralTheory.summable_prime_rpow_neg
+        exact h_re_bound
     -- Apply the exponential of sum formula
     rw [← Complex.exp_tsum h_summable]
     -- The key insight: for the regularized determinant, the sum equals 0

@@ -217,6 +217,12 @@ lemma summable_prime_rpow_neg (σ : ℝ) (hσ : σ > 1/2) :
       -- This gives Σ_{p≤x} p^(-σ) = O(x^(1-σ)/log x) which converges for σ > 1/2
              sorry -- Use prime number theorem to bound prime sums for 1/2 < σ ≤ 1
 
+/-- WeightedL2 elements have summable square norms -/
+lemma weightedL2_summable (x : WeightedL2) : Summable (fun p : {p : ℕ // Nat.Prime p} => ‖x p‖^2) := by
+  -- By definition, x ∈ WeightedL2 means x ∈ ℓ²(primes)
+  -- This is exactly the condition that Σ_p |x(p)|² < ∞
+  exact WeightedL2.summable_sq x
+
 /-- Taylor series bound for (1-z)e^z - 1 -/
 lemma taylor_bound_exp (z : ℂ) : ‖(1 - z) * Complex.exp z - 1‖ ≤ 2 * ‖z‖^2 := by
   -- Expand: (1-z)e^z - 1 = e^z - ze^z - 1 = e^z(1-z) - 1
@@ -480,7 +486,7 @@ theorem rayleighQuotient_max_at_criticalLine (x : WeightedL2) (h_nonzero : x ≠
         intro p
         exact sq_nonneg _
       · -- The series is summable (since x ∈ WeightedL2)
-        sorry -- Use WeightedL2 summability condition
+                  exact weightedL2_summable x
     · -- norm_sq > 0 since x ≠ 0
       -- Same argument as above
       apply tsum_pos
@@ -550,7 +556,7 @@ theorem rayleighQuotient_max_at_criticalLine (x : WeightedL2) (h_nonzero : x ≠
             exact sq_pos_of_ne_zero _ hp₀
           · intro p
             exact sq_nonneg _
-          · sorry -- Use WeightedL2 summability condition
+          · exact weightedL2_summable x
         · -- norm_sq > 0 since x ≠ 0
           apply tsum_pos
           · obtain ⟨p₀, hp₀⟩ : ∃ p : {p : ℕ // Nat.Prime p}, x p ≠ 0 := by
@@ -564,7 +570,7 @@ theorem rayleighQuotient_max_at_criticalLine (x : WeightedL2) (h_nonzero : x ≠
             exact sq_pos_of_ne_zero _ hp₀
           · intro p
             exact sq_nonneg _
-          · sorry -- Use WeightedL2 summability condition
+          · exact weightedL2_summable x
 
 /-- For diagonal operators, det₂(I - K) = 0 iff 1 ∈ spectrum(K) -/
 lemma det2_zero_iff_eigenvalue_diagonal (eigenvalues : {p : ℕ // Nat.Prime p} → ℂ)
