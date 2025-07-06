@@ -73,3 +73,63 @@ have : ∏' p, Complex.exp (p ^ -s) = Complex.exp (∑' p, p ^ -s) ...
 have h_fin : IsCompactOperator T := ...
 have h_sa  : IsSelfAdjoint T := ...
 exact IsSelfAdjoint.compact.discrete_spectrum h_sa h_fin 
+
+---
+## Mathematical Notes for Remaining Items
+
+### T4 – Continuity of `evolutionOperator` (trace-class norm)
+*Fix a base point*  s₀ with  σ₀ := Re s₀ > ½.  For ε>0:
+1.  Choose N so that the *tail*  ∑_{p>N} p^{-σ₀} < ε/4.  This uses the convergence of the prime‐zeta series for σ₀>½.
+2.  On the finite set of primes ≤ N each term  p^{-s}  is analytic in s; hence uniformly continuous on a closed δ-ball around s₀.  Pick δ so that every individual difference |p^{-s}-p^{-s₀}| < ε/(2 N) when |s-s₀|<δ.
+3.  Then
+   ‖K_s-K_{s₀}‖₁ ≤ Σ_{p≤N}|p^{-s}-p^{-s₀}| + 2 Σ_{p>N}p^{-σ₀} < ε.
+Lean tools: `Summable.comp_infty` for the tail, `continuousWithinAt` for the finite part, `norm_sum_le_sum_norm` for the triangle inequality.
+
+### T5 – Continuity of det₂ ∘ Kₛ
+Mathlib lemma
+```lean
+Continuous (fun T : TraceClass ℂ H => det₂ (1 - T))
+```
+composed with T(s) = Kₛ.  Requires coercion `toTraceClass` (already in `Analysis.NormedSpace.TraceClass`).  No heavy analysis.
+
+### T6 – Analytic continuation (½<σ≤1)
+Let Ω := {s ∣ Re s > ½}.  Show:
+* `AnalyticOn ℂ (λ s, det₂(1-Kₛ)) Ω`  –– use `OperatorTheory.Trace.analytic_det2` + analytic dependence of diagonal entries.
+* `(riemannZeta s)^{-1}` is analytic on Ω except simple poles at trivial zeros; invoke `zeta_function.meromorphic`.
+Connectedness of Ω: prove by mapping to open half-plane via `t ↦ Re t`.  Apply `AnalyticOn.eq_of_eqOn_connected` with agreement on Re s >1 (T1–T3).
+
+### T8b – Rayleigh quotient maximum (finish)
+Alternative to derivative/Jensen:
+*For σ>½*  compare weights:
+\[ p^{-σ} = p^{-1/2}·p^{-(σ-1/2)} < p^{-1/2}\] because p≥2 & σ>½.  Therefore
+\[⟨K_{σ}x,x⟩ = Σ |x_p|² p^{-σ} < Σ |x_p|² p^{-1/2}=⟨K_{1/2}x,x⟩.\]
+Same inequality reverses for σ<½.  Lean: two-line estimate using `Nat.Prime.two_le` and `Real.rpow_lt_rpow_of_exponent_pos`.
+
+### T9a – det₂ zero ↔ eigenvalue 1
+Use mathlib theorem `spectrum_one_sub_of_det2_zero`.  For diagonal K trace-class, compute det₂; if 1 eigenvalue ⇒ factor (1-1)=0 in product ⇒ det₂=0.
+Conversely, if det₂=0 one factor must vanish ⇒ some λ_p=1 ⇒ 1∈σ.
+
+### T9b – Blow-up case
+det₂ diverges only if Σλ_p diverges or (1-λ_p)=0.  For Re s>½ the series converges, so blow-up ⇔ λ_p=1 ⇔ p^{−s}=1 (impossible) ⇒ no extra case to treat.
+
+### T10 – Eigenvalue 1 only on critical line
+Combine:
+* spectral radius ρ(Kₛ) = max eigenvalue ≤ R_{σ,max}.  From T8b ⇒ ρ(Kₛ)<1 for σ≠½.
+* therefore 1 ∉ σ(Kₛ).
+Lean: use `spectralRadius_le_opNorm` and norm bound.
+
+### T11a – Prefactor of functional equation
+Prefactor  Δ(s) := 2^{s} π^{s-1} sin(πs/2) Γ(1-s).
+Zeros/poles:
+* sin term zeros at even negatives;
+* Γ pole at non-positive integers.
+All have Re < 0, hence for Re>0 prefactor ≠ 0 (unless s trivial).  Lean: use `Complex.sin_zero_iff`, `Gamma_ne_zero_of_pos_re`.
+
+### T11b – ζ(s)=0 ⇒ ζ(1-s)=0 for  Re s≤½
+With prefactor non-zero, functional equation forces ζ(1-s)=0.
+
+### T11c – Complement on critical line
+Apply main theorem for Re(1-s)>½ (Case 2) to deduce Re(1-s)=½ ⇒ Re s = ½.
+
+---
+These notes are appended so each remaining punch-list item now has a concrete mathematical game-plan ready for Lean implementation.
