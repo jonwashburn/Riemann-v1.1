@@ -687,7 +687,18 @@ theorem zeta_zero_iff_eigenvalue_one (s : ℂ) (hs : 1/2 < s.re) :
       -- Since we're dealing with discrete eigenvalues, 1 ∈ spectrum iff 1 is an eigenvalue
       apply spectrum_diagonal_characterization
       -- Need to show summability of evolution eigenvalues
-      sorry -- Use hs : 1/2 < s.re to show summability of p^{-s}
+      -- For Re(s) > 1/2, the series Σ_p |p^{-s}| converges
+      intro p
+      rw [RH.FredholmDeterminant.evolutionEigenvalues]
+      apply summable_of_norm_bounded
+      · intro p
+        exact (p.val : ℝ)^(-s.re)
+      · intro p
+        have h_pos : (0 : ℝ) < p.val := Nat.cast_pos.mpr (Nat.Prime.pos p.2)
+        rw [Complex.norm_cpow_of_pos h_pos]
+        exact le_refl _
+      · apply summable_prime_rpow_neg
+        exact hs
 
     rw [h_eigenvalue_characterization]
 
@@ -854,7 +865,62 @@ theorem eigenvalue_one_only_on_critical_line :
       unfold rayleighQuotient
       simp only [if_neg h_y_nonzero]
       -- Apply the weighted average bound
-      sorry -- Standard: weighted average bounded by maximum weight
+      -- The Rayleigh quotient is (Σ_p λ_p |y(p)|²) / (Σ_p |y(p)|²)
+      -- where λ_p = p^{-1/2} ≤ 2^{-1/2} for all p
+      -- Therefore R(y) ≤ 2^{-1/2}
+      have h_numerator : inner (evolutionOperatorFromEigenvalues (1/2 + 0 * I) y) y =
+          ∑' p : {p : ℕ // Nat.Prime p}, (p.val : ℂ)^(-(1/2 + 0 * I)) * inner (y p) (y p) := by
+        -- This follows from the diagonal structure
+        sorry -- Diagonal operator inner product formula
+      have h_denominator : ‖y‖^2 = ∑' p : {p : ℕ // Nat.Prime p}, ‖y p‖^2 := by
+        -- L² norm squared is sum of component norms squared
+        sorry -- L² norm formula
+      -- Apply the bound λ_p ≤ 2^{-1/2}
+      have h_bound : ∑' p : {p : ℕ // Nat.Prime p}, (p.val : ℂ)^(-(1/2 + 0 * I)) * inner (y p) (y p) ≤
+          2^(-1/2) * ∑' p : {p : ℕ // Nat.Prime p}, inner (y p) (y p) := by
+        apply tsum_le_tsum
+        · intro p
+          have h_eigenvalue_bound : (p.val : ℂ)^(-(1/2 + 0 * I)) ≤ (2 : ℂ)^(-1/2) := by
+            -- Convert to real comparison
+            have h_real : (p.val : ℂ)^(-(1/2 + 0 * I)) = ((p.val : ℝ)^(-1/2) : ℂ) := by
+              simp [Complex.cpow_def_of_ne_zero]
+              sorry -- Complex power simplification
+            rw [h_real]
+            norm_cast
+            exact h_max_eigenvalue p
+          exact mul_le_mul_of_nonneg_right h_eigenvalue_bound (inner_self_nonneg)
+        · sorry -- Summability of weighted inner products
+        · exact weightedL2_summable y
+      -- Conclude the bound
+      calc rayleighQuotient (evolutionOperatorFromEigenvalues (1/2 + 0 * I)) y
+        = inner (evolutionOperatorFromEigenvalues (1/2 + 0 * I) y) y / ‖y‖^2 := by rfl
+        _ = (∑' p : {p : ℕ // Nat.Prime p}, (p.val : ℂ)^(-(1/2 + 0 * I)) * inner (y p) (y p)) /
+            (∑' p : {p : ℕ // Nat.Prime p}, ‖y p‖^2) := by
+          rw [h_numerator, h_denominator]
+        _ ≤ (2^(-1/2) * ∑' p : {p : ℕ // Nat.Prime p}, inner (y p) (y p)) /
+            (∑' p : {p : ℕ // Nat.Prime p}, ‖y p‖^2) := by
+          apply div_le_div_of_nonneg_left h_bound
+          · exact tsum_nonneg (fun p => sq_nonneg _)
+          · apply tsum_pos
+            · obtain ⟨p₀, hp₀⟩ : ∃ p : {p : ℕ // Nat.Prime p}, y p ≠ 0 := by
+                by_contra h_all_zero
+                push_neg at h_all_zero
+                have h_y_zero : y = 0 := by
+                  ext p
+                  exact h_all_zero p
+                exact h_y_nonzero h_y_zero
+              use p₀
+              exact sq_pos_of_ne_zero _ hp₀
+            · intro p
+              exact sq_nonneg _
+            · exact weightedL2_summable y
+        _ = 2^(-1/2) := by
+          -- inner (y p) (y p) = ‖y p‖^2
+          have h_inner_eq_norm : ∀ p, inner (y p) (y p) = ‖y p‖^2 := by
+            intro p
+            exact inner_self_eq_norm_sq_to_K
+          simp_rw [h_inner_eq_norm]
+          field_simp
 
     -- Since 2^{-1/2} < 1, we have R_{1/2}(y) < 1
     have h_sqrt_two_inv_lt_one : 2^(-1/2) < 1 := by
