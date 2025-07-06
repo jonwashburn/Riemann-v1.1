@@ -125,8 +125,13 @@ theorem riemann_hypothesis :
                 use n
                 -- From πs/2 = nπ, we get s = 2n
                 have : π * s / 2 = n * π := hn
-                field_simp at this
-                linarith [this]
+                have : s = 2 * n := by
+                  -- Solve π * s / 2 = n * π for s
+                  have h_pi_ne_zero : (π : ℂ) ≠ 0 := by
+                    simp [Real.pi_ne_zero]
+                  field_simp [h_pi_ne_zero] at this
+                  exact this
+                rw [this]
               obtain ⟨n, hn⟩ := h_s_even_int
               -- If s = 2n and s ∉ trivialZeros, then n ≥ 0
               -- But trivialZeros = {-2, -4, -6, ...}, so s = 2n with n ≤ -1 would be trivial
@@ -150,7 +155,11 @@ theorem riemann_hypothesis :
                 have h_re_bound : s.re ≤ 1/2 := h_case
                 rw [hn] at h_re_bound
                 simp at h_re_bound
-                have h_n_small : (n : ℝ) ≤ 1/4 := by linarith [h_re_bound]
+                have h_n_small : (n : ℝ) ≤ 1/4 := by
+                  -- From s.re ≤ 1/2 and s = 2n, we get 2n ≤ 1/2
+                  have : s.re = 2 * n := by simp [hn]
+                  rw [this] at h_re_bound
+                  linarith [h_re_bound]
                 have h_n_zero : n = 0 := by
                   interval_cases n
                   · rfl
@@ -175,11 +184,19 @@ theorem riemann_hypothesis :
                 obtain ⟨_, _, n, hn⟩ := h_one_minus_s_nonpos
                 use n
                 -- From 1 - s = -n, we get s = 1 + n
-                linarith [hn]
+                have : s = 1 + n := by
+                  rw [← Complex.neg_neg s, ← hn]
+                  ring
+                rw [this]
+                simp
               obtain ⟨n, hn⟩ := h_s_pos_int
               rw [hn] at h_case
               simp at h_case
               -- We have Re(n + 1) = n + 1 ≤ 1/2, so n + 1 ≤ 1/2, which is impossible for n ∈ ℕ
+              have : s.re = (n : ℝ) + 1 := by simp [hn]
+              rw [this] at h_case
+              have : (n : ℝ) + 1 ≤ 1/2 := h_case
+              have : (0 : ℝ) ≤ n := Nat.cast_nonneg n
               linarith
           have h_zeta_complement_zero : riemannZeta (1 - s) = 0 := by
             apply (h_functional_eq hzero).resolve_right

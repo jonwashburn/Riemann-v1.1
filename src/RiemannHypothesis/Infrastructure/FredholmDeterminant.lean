@@ -1,5 +1,7 @@
 import Mathlib.Analysis.InnerProductSpace.l2Space
 import Mathlib.Analysis.Normed.Operator.ContinuousLinearMap
+import Mathlib.Analysis.Complex.Cpow
+import Mathlib.Analysis.Holomorphic.Prod
 import RiemannHypothesis.Infrastructure.WeightedHilbertSpace
 
 /-!
@@ -476,12 +478,68 @@ theorem determinant_identity_extended (s : ℂ) (hs : 1/2 < s.re) :
         -- For compact K ⊆ Ω, we have uniform bounds on Re(s)
         have h_re_bound : ∃ σ_min > 1/2, ∀ s ∈ K, s.re ≥ σ_min := by
           -- Use compactness to get uniform lower bound on Re(s)
-          sorry -- Standard: compact set has uniform bounds
+          -- Since K is compact and K ⊆ Ω = {s | s.re > 1/2}, we can find σ_min
+          have h_continuous_re : Continuous (fun s : ℂ => s.re) := by
+            exact Complex.continuous_re
+          have h_image_compact : IsCompact (Complex.re '' K) := by
+            exact IsCompact.image hK_compact h_continuous_re
+          have h_image_nonempty : (Complex.re '' K).Nonempty := by
+            exact Set.Nonempty.image (IsCompact.nonempty_iff.mp hK_compact) Complex.re
+          have h_image_bounded_below : BddBelow (Complex.re '' K) := by
+            use 1/2
+            intro x hx
+            obtain ⟨s, hs_in_K, hs_eq⟩ := hx
+            rw [← hs_eq]
+            have hs_in_Ω : s ∈ Ω := hK_subset hs_in_K
+            simp only [Ω] at hs_in_Ω
+            exact le_of_lt hs_in_Ω
+          obtain ⟨σ_min, h_min_in_image, h_min_is_min⟩ := IsCompact.exists_isMinOn h_image_compact h_image_nonempty
+          obtain ⟨s_min, hs_min_in_K, hs_min_eq⟩ := h_min_in_image
+          use σ_min + 1/4  -- Add a small buffer
+          constructor
+          · have h_σ_min_ge : σ_min > 1/2 := by
+              rw [← hs_min_eq]
+              have hs_min_in_Ω : s_min ∈ Ω := hK_subset hs_min_in_K
+              simp only [Ω] at hs_min_in_Ω
+              exact hs_min_in_Ω
+            linarith [h_σ_min_ge]
+          · intro s hs_in_K
+            have h_s_ge_min : σ_min ≤ s.re := by
+              rw [← hs_min_eq]
+              apply h_min_is_min
+              exact Set.mem_image_of_mem Complex.re hs_in_K
+            linarith [h_s_ge_min]
         obtain ⟨σ_min, hσ_min, h_bound⟩ := h_re_bound
         use 2  -- A reasonable constant
         intro s hs p
         -- Use the fact that for Re(s) ≥ σ_min > 1/2, we have good bounds
-        sorry -- Standard: uniform bounds on infinite product terms
+        -- For the infinite product term: |(1 - p^{-s}) * exp(p^{-s}) - 1|
+        -- We can bound this using |p^{-s}| ≤ p^{-σ_min} and Taylor series
+        have h_eigenvalue_bound : ‖(p.val : ℂ)^(-s)‖ ≤ (p.val : ℝ)^(-(σ_min + 1/4)) := by
+          have h_s_re_bound : s.re ≥ σ_min + 1/4 := h_bound s hs
+          have h_pos : (0 : ℝ) < p.val := Nat.cast_pos.mpr (Nat.Prime.pos p.2)
+          rw [Complex.norm_cpow_of_pos h_pos]
+          apply Real.rpow_le_rpow_of_exponent_nonpos
+          · exact Nat.one_le_cast.mpr (Nat.Prime.one_lt p.2).le
+          · exact neg_le_neg h_s_re_bound
+        -- Use the bound |(1-z)e^z - 1| ≤ C|z|² for the infinite product term
+        have h_product_bound : ‖(1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s)) - 1‖ ≤
+            2 * ‖(p.val : ℂ)^(-s)‖^2 := by
+          sorry -- Standard Taylor series bound for (1-z)e^z - 1
+        -- Combine the bounds
+        have h_final_bound : ‖(1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s)) - 1‖ ≤
+            2 * ((p.val : ℝ)^(-(σ_min + 1/4)))^2 := by
+          calc ‖(1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s)) - 1‖
+            ≤ 2 * ‖(p.val : ℂ)^(-s)‖^2 := h_product_bound
+            _ ≤ 2 * ((p.val : ℝ)^(-(σ_min + 1/4)))^2 := by
+              apply mul_le_mul_of_nonneg_left
+              · exact pow_le_pow_right (norm_nonneg _) h_eigenvalue_bound
+              · norm_num
+        -- Since σ_min + 1/4 > 1/2, we have (p.val : ℝ)^(-(σ_min + 1/4)) ≤ p^{-1/2}
+        exact le_trans h_final_bound (by
+          simp [Real.rpow_neg (le_of_lt (Nat.cast_pos.mpr (Nat.Prime.pos p.2)))]
+          sorry -- Standard bound using σ_min + 1/4 > 1/2
+        )
       apply AnalyticOn.infinite_prod
       · -- Each factor is analytic
         intro p

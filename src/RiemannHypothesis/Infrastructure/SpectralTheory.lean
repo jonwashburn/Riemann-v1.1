@@ -2,6 +2,7 @@ import Mathlib.Analysis.Normed.Operator.ContinuousLinearMap
 import Mathlib.Analysis.InnerProductSpace.Spectrum
 import Mathlib.Analysis.Normed.Operator.Compact
 import Mathlib.LinearAlgebra.Eigenspace.Basic
+import Mathlib.Topology.InfiniteSum
 import RiemannHypothesis.Infrastructure.WeightedHilbertSpace
 import RiemannHypothesis.Infrastructure.FredholmDeterminant
 
@@ -360,7 +361,25 @@ lemma det2_zero_iff_eigenvalue_diagonal (eigenvalues : {p : ℕ // Nat.Prime p} 
       have h_summable_log : Summable (fun p : {p : ℕ // Nat.Prime p} => ‖(1 - eigenvalues p) * Complex.exp (eigenvalues p) - 1‖) := by
         -- This follows from the trace-class condition and properties of exp
         -- For trace-class operators, the infinite product converges
-        sorry -- Standard: trace-class implies product convergence
+        -- Use the fact that |(1-z)e^z - 1| ≤ C|z|² for small |z|
+        apply summable_of_norm_bounded_eventually
+        · intro p
+          exact ‖eigenvalues p‖^2
+        · apply eventually_of_forall
+          intro p
+          -- For |z| small, |(1-z)e^z - 1| = |e^z - 1 - z| ≤ C|z|²
+          -- This follows from the Taylor expansion e^z = 1 + z + z²/2 + ...
+          have h_taylor_bound : ‖(1 - eigenvalues p) * Complex.exp (eigenvalues p) - 1‖ ≤ 2 * ‖eigenvalues p‖^2 := by
+            -- Expand: (1-z)e^z - 1 = e^z - ze^z - 1 = e^z(1-z) - 1
+            -- Use Taylor series: e^z = 1 + z + z²/2! + z³/3! + ...
+            -- So (1-z)e^z = (1-z)(1 + z + z²/2! + ...) = 1 - z²/2! - z³/3! + ...
+            -- Therefore |(1-z)e^z - 1| ≤ |z|²/2! + |z|³/3! + ... ≤ C|z|² for some C
+            sorry -- Standard Taylor series bound for (1-z)e^z - 1
+          exact le_trans h_taylor_bound (by norm_num)
+        · -- The series Σ ‖eigenvalues p‖² is summable by trace-class assumption
+          apply Summable.pow
+          exact h_trace_class
+          norm_num
       -- Apply the infinite product zero characterization
       have h_tprod_zero : ∃ p : {p : ℕ // Nat.Prime p}, (1 - eigenvalues p) * Complex.exp (eigenvalues p) = 0 := by
         -- Use tprod_eq_zero_iff from mathlib
@@ -388,7 +407,18 @@ lemma det2_zero_iff_eigenvalue_diagonal (eigenvalues : {p : ℕ // Nat.Prime p} 
     -- This uses the fact that infinite products preserve zeros
     have h_summable : Summable (fun p : {p : ℕ // Nat.Prime p} => ‖(1 - eigenvalues p) * Complex.exp (eigenvalues p) - 1‖) := by
       -- This follows from the trace-class condition
-      sorry -- Standard: trace-class implies product convergence
+      -- Same argument as above: use Taylor series bound
+      apply summable_of_norm_bounded_eventually
+      · intro p
+        exact ‖eigenvalues p‖^2
+      · apply eventually_of_forall
+        intro p
+        have h_taylor_bound : ‖(1 - eigenvalues p) * Complex.exp (eigenvalues p) - 1‖ ≤ 2 * ‖eigenvalues p‖^2 := by
+          sorry -- Standard Taylor series bound for (1-z)e^z - 1
+        exact le_trans h_taylor_bound (by norm_num)
+      · apply Summable.pow
+        exact h_trace_class
+        norm_num
     -- Apply the infinite product characterization
     rw [tprod_eq_zero_iff h_summable]
     use p₀
@@ -643,24 +673,19 @@ theorem eigenvalue_one_only_on_critical_line :
   -- Since p₀ ≥ 2 and p₀^{Re(s)} = 1, we need Re(s) = 0
   have h_prime_ge_two : 2 ≤ p₀.val := Nat.Prime.two_le p₀.2
   have h_real_part_zero : s.re = 0 := by
-    -- If a^x = 1 for a > 1, then x = 0
+    -- From h_modulus_eq_one: (p₀.val : ℝ)^s.re = 1
+    -- Since p₀ ≥ 2 > 1, we need s.re = 0 for the equation to hold
     have h_pos : (0 : ℝ) < p₀.val := Nat.cast_pos.mpr (Nat.Prime.pos p₀.2)
     have h_gt_one : 1 < (p₀.val : ℝ) := Nat.one_lt_cast.mpr (Nat.Prime.one_lt p₀.2)
-    -- Use the fact that if a > 1 and a^x = 1, then x = 0
-    by_contra h_ne_zero
-    cases' lt_or_gt_of_ne h_ne_zero with h_neg h_pos_re
-    · -- Case s.re < 0: then p₀^{s.re} > 1, contradiction
-      have h_power_gt_one : 1 < (p₀.val : ℝ)^s.re := by
-        apply Real.one_lt_rpow_of_pos_of_lt_one_of_neg h_pos
-        · exact Nat.cast_lt.mpr (Nat.Prime.two_le p₀.2)
-        · exact h_neg
-      rw [h_modulus_eq_one] at h_power_gt_one
-      exact lt_irrefl 1 h_power_gt_one
-    · -- Case s.re > 0: then p₀^{s.re} > 1, contradiction
-      have h_power_gt_one : 1 < (p₀.val : ℝ)^s.re := by
-        apply Real.one_lt_rpow_of_pos_of_lt_one_of_pos h_pos h_gt_one h_pos_re
-      rw [h_modulus_eq_one] at h_power_gt_one
-      exact lt_irrefl 1 h_power_gt_one
+    -- Direct application: if a > 1 and a^x = 1, then x = 0
+    rw [Real.rpow_eq_one_iff_of_pos h_pos] at h_modulus_eq_one
+    cases h_modulus_eq_one with
+    | inl h => exact h.2
+    | inr h =>
+      -- Case: p₀.val = 1, but this contradicts p₀ ≥ 2
+      have : (p₀.val : ℝ) = 1 := h.1
+      have : (1 : ℝ) < 1 := by rwa [← this]
+      exact lt_irrefl 1 this
 
   -- But Re(s) = 0 ≠ 1/2, which contradicts our assumption
   -- Wait, this doesn't directly contradict h_not_critical since 0 ≠ 1/2

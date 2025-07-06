@@ -29,7 +29,7 @@ jobs:
         path: |
           .lake/packages
           .lake/build
-        key: ${{ runner.os }}-lake-${{ hashFiles('lakefile.lean', 'lake-manifest.json') }}
+        key: ${{ runner.os }}-lake-${{ hashFiles('lakefile.lean', 'lake-manifest.json', 'lean-toolchain') }}
         restore-keys: |
           ${{ runner.os }}-lake-
           
@@ -38,7 +38,6 @@ jobs:
         lake build
         
     - name: Strict build check (Phase 5)
-      if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[no-sorry]')
       run: |
         echo "Running strict Phase 5 build checks..."
         echo "1. Verifying lake manifest exists..."
@@ -46,19 +45,32 @@ jobs:
           echo "❌ lake-manifest.json missing"
           exit 1
         fi
-        echo "2. Running full build..."
+        echo "2. Running full build verification..."
         lake build --verbose
-        echo "3. Checking for no-sorry compliance..."
-        if command -v lake exe Scripts.checkNoSorry >/dev/null 2>&1; then
-          lake exe Scripts.checkNoSorry
+        echo "3. Checking build status..."
+        if [ $? -eq 0 ]; then
+          echo "✅ Build completed successfully"
         else
-          echo "⚠️  Scripts.checkNoSorry not available, using grep fallback"
-          if grep -r "sorry" src/ --include="*.lean"; then
-            echo "❌ Sorry statements found in strict mode"
-            exit 1
-          fi
+          echo "❌ Build failed"
+          exit 1
         fi
-        echo "✅ Strict build checks passed!"
+        echo "4. Checking for no-sorry compliance (if [no-sorry] tag present)..."
+        if [[ "${{ github.event.head_commit.message }}" == *"[no-sorry]"* ]]; then
+          echo "🔍 [no-sorry] tag detected - running strict check"
+          if command -v lake exe Scripts.checkNoSorry >/dev/null 2>&1; then
+            lake exe Scripts.checkNoSorry
+          else
+            echo "⚠️  Scripts.checkNoSorry not available, using grep fallback"
+            if grep -r "sorry" src/ --include="*.lean"; then
+              echo "❌ Sorry statements found in strict mode"
+              exit 1
+            fi
+          fi
+          echo "✅ No-sorry compliance verified!"
+        else
+          echo "ℹ️  No [no-sorry] tag - skipping strict sorry check"
+        fi
+        echo "✅ All strict build checks passed!"
         
     - name: Check for sorry statements
       run: |
