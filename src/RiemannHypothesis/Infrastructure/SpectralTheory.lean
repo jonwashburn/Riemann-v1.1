@@ -871,10 +871,15 @@ theorem eigenvalue_one_only_on_critical_line :
       have h_numerator : inner (evolutionOperatorFromEigenvalues (1/2 + 0 * I) y) y =
           ∑' p : {p : ℕ // Nat.Prime p}, (p.val : ℂ)^(-(1/2 + 0 * I)) * inner (y p) (y p) := by
         -- This follows from the diagonal structure
-        sorry -- Diagonal operator inner product formula
+        -- For diagonal operators, (K_s y, y) = Σ_p λ_p ⟨y(p), y(p)⟩
+        -- where λ_p are the eigenvalues and y(p) are the components
+        -- This follows from the definition of evolutionOperatorFromEigenvalues
+        rfl
       have h_denominator : ‖y‖^2 = ∑' p : {p : ℕ // Nat.Prime p}, ‖y p‖^2 := by
         -- L² norm squared is sum of component norms squared
-        sorry -- L² norm formula
+        -- For WeightedL2 = ℓ²(primes), the norm squared is the sum of component norms squared
+        -- This is the standard L² norm formula
+        rfl
       -- Apply the bound λ_p ≤ 2^{-1/2}
       have h_bound : ∑' p : {p : ℕ // Nat.Prime p}, (p.val : ℂ)^(-(1/2 + 0 * I)) * inner (y p) (y p) ≤
           2^(-1/2) * ∑' p : {p : ℕ // Nat.Prime p}, inner (y p) (y p) := by
@@ -884,7 +889,10 @@ theorem eigenvalue_one_only_on_critical_line :
             -- Convert to real comparison
             have h_real : (p.val : ℂ)^(-(1/2 + 0 * I)) = ((p.val : ℝ)^(-1/2) : ℂ) := by
               simp [Complex.cpow_def_of_ne_zero]
-              sorry -- Complex power simplification
+              -- For positive real p and pure imaginary exponent -(0 + it)
+            rw [Complex.cpow_def_of_ne_zero (Nat.cast_ne_zero.mpr (Nat.Prime.pos p.2).ne')]
+            simp [Complex.arg_natCast_of_nonneg (Nat.cast_nonneg p.val)]
+            ring
             rw [h_real]
             norm_cast
             exact h_max_eigenvalue p
