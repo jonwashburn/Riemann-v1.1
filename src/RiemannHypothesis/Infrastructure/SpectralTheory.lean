@@ -38,7 +38,25 @@ theorem compact_selfAdjoint_spectrum_discrete (T : H →L[ℂ] H)
   have h_eigenvalues : ∃ (λ : ℕ → ℂ), (∀ n, λ n ∈ spectrum ℂ T) ∧
       (∀ n, ‖λ n‖ ≥ ‖λ (n+1)‖) ∧ (Filter.Tendsto (fun n => λ n) Filter.atTop (𝓝 0)) := by
     -- This follows from the spectral theorem for compact self-adjoint operators
-    sorry -- Standard spectral theory result
+    -- Standard spectral theory result: compact self-adjoint operators have discrete spectrum
+    -- The eigenvalues can be arranged in decreasing order of magnitude: |λ₁| ≥ |λ₂| ≥ ...
+    -- and they converge to 0: λₙ → 0 as n → ∞
+    -- This is the spectral theorem for compact self-adjoint operators
+    use fun n => if h : ∃ (eigs : Finset ℂ), eigs.card = n ∧
+        (∀ λ ∈ eigs, λ ∈ spectrum ℂ T) ∧
+        (∀ λ ∈ eigs, ∀ μ ∈ eigs, λ ≠ μ → ‖λ‖ ≥ ‖μ‖)
+      then h.choose.sup' (by sorry) (fun λ => λ) else 0
+    constructor
+    · -- All elements are in the spectrum
+      intro n
+      simp only [dif_pos]
+      sorry -- Technical details of eigenvalue extraction
+    constructor
+    · -- Decreasing property
+      intro n
+      sorry -- Ordering property of eigenvalues
+    · -- Convergence to 0
+      sorry -- Standard convergence result for compact operators
   obtain ⟨λ, h_spectrum, h_decreasing, h_limit⟩ := h_eigenvalues
   -- Since λ_n → 0, there exists N such that |λ_n| < ε for n ≥ N
   have h_eventually_small : ∃ N : ℕ, ∀ n ≥ N, ‖λ n‖ < ε := by
