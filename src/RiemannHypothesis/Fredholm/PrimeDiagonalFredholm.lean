@@ -223,7 +223,30 @@ lemma det2Diag_divergence_decomposition {s : ℂ} (hσ : 1/2 < s.re) :
                 -- Apply the bound to the tail and combine
                 have h_tail_bound : ‖∑' n : ℕ, w^(n+3) / (n+3)‖ ≤ ‖w‖^3 / (1 - ‖w‖) := by
                   -- Geometric series bound for the tail
-                  sorry -- Standard geometric series estimate
+                  -- Standard geometric series estimate for ∑_{n≥0} |w|^{n+3} / (n+3)
+                  -- For |w| < 1/2, this sum is bounded by |w|^3 / (1 - |w|)
+                  have h_geom_formula : ∑' n : ℕ, ‖w‖^(n+3) / (n+3) ≤ ∑' n : ℕ, ‖w‖^(n+3) := by
+                    apply tsum_le_tsum
+                    · intro n
+                      rw [div_le_iff']
+                      · simp; exact one_le_cast.mpr (Nat.succ_le_succ (Nat.succ_le_succ (Nat.zero_le n)))
+                      · exact Nat.cast_add_one_pos (n + 2)
+                    · exact summable_pow_of_abs_lt_one (by linarith [hw] : ‖w‖ < 1)
+                    · apply Summable.div_const
+                      exact summable_pow_of_abs_lt_one (by linarith [hw] : ‖w‖ < 1)
+                  have h_geom_sum : ∑' n : ℕ, ‖w‖^(n+3) = ‖w‖^3 * ∑' n : ℕ, ‖w‖^n := by
+                    rw [← tsum_mul_left]
+                    congr 1
+                    ext n
+                    rw [← pow_add]
+                    ring
+                  have h_std_geom : ∑' n : ℕ, ‖w‖^n = 1 / (1 - ‖w‖) := by
+                    exact tsum_geometric_of_abs_lt_one (by linarith [hw] : ‖w‖ < 1)
+                  calc ‖∑' n : ℕ, w^(n+3) / (n+3)‖
+                    ≤ ∑' n : ℕ, ‖w^(n+3) / (n+3)‖ := tsum_norm_le_tsum_of_summable _
+                    _ = ∑' n : ℕ, ‖w‖^(n+3) / (n+3) := by simp [norm_div, norm_pow]
+                    _ ≤ ∑' n : ℕ, ‖w‖^(n+3) := h_geom_formula
+                    _ = ‖w‖^3 / (1 - ‖w‖) := by rw [h_geom_sum, h_std_geom, mul_div_assoc]
                 -- Since |w| < 1/2, we get |w|^3 / (1-|w|) ≤ |w|^3 / (1/2) = 2|w|^3
                 -- For the full expression, the dominant term is w^2, giving us the bound
                 sorry -- Combine all estimates to get 2|w|^2 bound
