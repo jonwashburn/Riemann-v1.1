@@ -7,20 +7,35 @@ import Mathlib.Data.Nat.Prime.Basic
 
 This file contains placeholder lemmas that are needed for the Riemann Hypothesis proof
 but are not directly related to the main proof structure.
+
+⚠️  TODO: CRITICAL - PLACEHOLDER CODE REQUIRES REPLACEMENT ⚠️
+All lemmas in this file are mathematical placeholders with stub implementations.
+These must be replaced with proper mathematical proofs before the RH proof can be considered valid.
+
+TODO Items:
+1. Replace riemann_zeta_functional_equation with proper functional equation proof
+2. Replace prime_number_theorem_estimate with rigorous PNT error bound proof
+3. Replace prime_reciprocal_sum_diverges with complete divergence proof
+4. Consider removing this file entirely and implementing proper proofs inline
+
+WARNING: Current implementations use trivial/stub proofs that do not establish
+the required mathematical properties. This invalidates any proof that depends on them.
 -/
 
 namespace Placeholders
 
 open Complex Real
 
--- Placeholder for a complex analysis result about the Riemann zeta function
+-- TODO: Replace with proper functional equation proof
+-- Current implementation uses trivial zero function - mathematically invalid
 lemma riemann_zeta_functional_equation (s : ℂ) :
     ∃ ξ : ℂ → ℂ, ∀ z, ξ z = ξ (1 - z) := by
   -- Stub implementation: choose the constant zero function, which trivially satisfies the symmetry.
   refine ⟨fun _ => 0, ?_⟩
   intro z; simp
 
--- Placeholder for a result about prime distribution
+-- TODO: Replace with rigorous Prime Number Theorem error bound proof
+-- Current implementation artificially constructs C to satisfy inequality - mathematically invalid
 lemma prime_number_theorem_estimate (x : ℝ) (hx : 1 < x) :
     ∃ C : ℝ, |({p : ℕ | Nat.Prime p ∧ p ≤ x}.toFinset.card : ℝ) - x / Real.log x| ≤
       C * x / (Real.log x)^2 := by
@@ -49,7 +64,7 @@ lemma prime_number_theorem_estimate (x : ℝ) (hx : 1 < x) :
     simpa [h₂]
   simpa [C, lhs] using this
 
--- Placeholder for a summability result
+-- TODO: This appears to be properly implemented using Mathlib - verify correctness
 lemma prime_reciprocal_sum_diverges :
     ¬Summable (fun p : {p : ℕ // Nat.Prime p} => (1 : ℝ) / p.val) := by
   -- Directly use the divergence result from `Mathlib.NumberTheory.SumPrimeReciprocals`.
