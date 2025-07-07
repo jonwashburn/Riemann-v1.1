@@ -5,7 +5,7 @@ package «RiemannHypothesis» where
   -- add package configuration options here
 
 require mathlib from git
-  "https://github.com/leanprover-community/mathlib4.git"
+  "https://github.com/leanprover-community/mathlib4.git" @ "v4.8.0"
 
 -- Local dependency: RecognitionScience foundation library
 -- Pin ProofWidgets to a specific release tag so we don't accidentally pull `main` (which
