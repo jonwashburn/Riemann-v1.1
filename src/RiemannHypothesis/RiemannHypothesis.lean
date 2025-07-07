@@ -111,7 +111,14 @@ theorem riemann_hypothesis :
             -- The prefactor is zero iff sin(πs/2) = 0 or Γ(1-s) = 0 (has a pole)
             have h_sin_or_gamma : Complex.sin (π * s / 2) = 0 ∨ Complex.Gamma (1 - s) = 0 := by
               -- If the product is zero and some factors are nonzero, then one of the remaining factors is zero
-              sorry -- Standard: if product is zero, some factor is zero
+              -- If a * b * c * d = 0 and we know a ≠ 0 and b ≠ 0, then c = 0 or d = 0
+              -- Apply this to our product: 2^s * π^{s-1} * sin(πs/2) * Γ(1-s) = 0
+              have h_last_two_zero : Complex.sin (π * s / 2) * Complex.Gamma (1 - s) = 0 := by
+                have h_first_two_nonzero : (2 : ℂ)^s * π^(s-1) ≠ 0 := by
+                  exact mul_ne_zero h_factors.1 h_factors.2
+                exact eq_zero_of_ne_zero_of_mul_left_eq_zero h_first_two_nonzero h_zero
+              -- Now apply to the product of the last two factors
+              exact mul_eq_zero.mp h_last_two_zero
 
             cases h_sin_or_gamma with
             | inl h_sin_zero =>

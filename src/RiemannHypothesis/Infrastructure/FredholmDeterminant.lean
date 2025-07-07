@@ -488,7 +488,32 @@ lemma fredholm_determinant_continuous :
               -- For sufficiently large N, this is < 1/2, so |1 - p^{-s}| ≤ 1
               exact norm_one_sub_le_one_of_norm_le_half (by
                 -- Choose N large enough so that N^{-σ_min + δ/2} < 1/2
-                sorry -- Technical: choose N large enough for the bound
+                -- We need N^{-σ_min + δ/2} < 1/2
+                -- Since σ_min > 1/2 and δ/2 is small, we have -σ_min + δ/2 < 0
+                -- Therefore N^{-σ_min + δ/2} → 0 as N → ∞, so we can choose N large enough
+                have h_exp_neg : -σ_min + δ/2 < 0 := by
+                  have h_delta_bound : δ/2 < σ_min - 1/2 := by
+                    have h_neighborhood_bound : δ < s₀.re - 1/2 := by
+                      apply h_neighborhood.2
+                      simp
+                    linarith [h_neighborhood_bound, hσ_min]
+                  linarith [h_delta_bound]
+                -- For negative exponent and N ≥ 2, we have N^{-σ_min + δ/2} ≤ 2^{-σ_min + δ/2}
+                -- Choose N such that 2^{-σ_min + δ/2} < 1/2
+                have h_bound_at_2 : (2 : ℝ)^(-σ_min + δ/2) < 1/2 := by
+                  rw [Real.rpow_lt_iff_lt_iff]
+                  · constructor
+                    · exact h_exp_neg
+                    · norm_num
+                  · norm_num
+                -- Since h_small gives us ‖(p.val : ℂ)^(-s)‖ ≤ (N : ℝ)^(-σ_min + δ/2)
+                -- and we can choose N ≥ 2, we get the desired bound
+                exact lt_trans (le_trans h_small (by
+                  apply Real.rpow_le_rpow_of_exponent_nonpos
+                  · norm_num
+                  · exact Nat.cast_le.mpr (Nat.le_max_left 2 N)
+                  · exact h_exp_neg
+                )) h_bound_at_2
               )
             -- Combine the bounds
             exact mul_le_mul h_one_minus_bound h_exp_bound (norm_nonneg _) (by norm_num)
