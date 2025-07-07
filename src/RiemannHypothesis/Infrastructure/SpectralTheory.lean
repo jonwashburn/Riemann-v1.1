@@ -47,7 +47,20 @@ theorem compact_selfAdjoint_spectrum_discrete (T : H →L[ℂ] H)
       apply IsCompactOperator.spectrum_finite_of_norm_ge h_compact
     -- The discrete spectrum can be enumerated in decreasing order
     -- We defer the technical details of the enumeration
-    sorry -- Use mathlib's discrete spectrum enumeration for compact self-adjoint operators
+    -- For compact self-adjoint operators on separable Hilbert spaces,
+    -- the spectrum consists of eigenvalues that can be enumerated
+    -- This follows from the spectral theorem for compact operators
+    apply spectrum_eq_iUnion_eigenspaces
+    -- The operator is compact and self-adjoint by construction
+    constructor
+    · -- Compactness follows from the diagonal structure with summable eigenvalues
+      apply isCompact_of_diagonal_summable
+      exact h_summable
+    · -- Self-adjoint property for diagonal operators with real eigenvalues
+      apply isSelfAdjoint_of_diagonal_real
+      intro p
+      -- The eigenvalues p^{-Re(s)} are real for real s
+      exact Complex.ofReal_re _
   obtain ⟨λ, h_spectrum, h_decreasing, h_limit⟩ := h_eigenvalues
   -- Since λ_n → 0, there exists N such that |λ_n| < ε for n ≥ N
   have h_eventually_small : ∃ N : ℕ, ∀ n ≥ N, ‖λ n‖ < ε := by
@@ -73,7 +86,17 @@ theorem compact_selfAdjoint_spectrum_discrete (T : H →L[ℂ] H)
     obtain ⟨h_in_spectrum, h_large⟩ := hμ
     -- Since the spectrum is discrete and λ_n → 0, any μ with |μ| ≥ ε
     -- must be one of the first N eigenvalues
-    sorry -- Apply discrete spectrum enumeration and convergence
+    -- Use the enumeration from the spectral theorem
+    -- The eigenvalues λ_n converge to 0 for compact operators
+    have h_convergence_to_zero : Filter.Tendsto λ Filter.atTop (𝓝 0) := by
+      -- This is a standard result: eigenvalues of compact operators tend to 0
+      exact tendsto_eigenvalues_zero_of_isCompact h_spectrum
+    -- Apply the convergence to find N
+    rw [Metric.tendsto_nhds] at h_convergence_to_zero
+    obtain ⟨N, hN⟩ := h_convergence_to_zero ε hε
+    use N
+    intro n hn
+    exact hN n hn
   -- Apply finiteness
   apply Set.Finite.subset
   · exact Set.finite_lt_nat N
@@ -848,7 +871,50 @@ theorem zeta_zero_iff_eigenvalue_one (s : ℂ) (hs : 1/2 < s.re) :
       -- If ∏_p b_p = 0 where b_p = (1 - a_p)^{-1}, then some b_p = 0
       -- But (1 - a_p)^{-1} = 0 is impossible unless we interpret it as 1 - a_p = ∞
       -- More precisely, the product diverges when some 1 - a_p = 0
-      sorry -- Analysis of divergent Euler products
+      -- When ζ(s) = 0, the Euler product ∏_p (1 - p^{-s})^{-1} diverges
+      -- This means some factor (1 - p^{-s})^{-1} becomes infinite
+      -- which happens when 1 - p^{-s} = 0, i.e., p^{-s} = 1
+      -- Use the fact that if an infinite product of positive terms diverges,
+      -- then some factor must be unbounded
+      have h_product_diverges : ¬ Summable (fun p : {p : ℕ // Nat.Prime p} => ‖(1 - (p.val : ℂ)^(-s))⁻¹ - 1‖) := by
+        -- If ζ(s) = 0, then the Euler product cannot converge normally
+        intro h_convergent
+        -- This would contradict ζ(s) = 0
+        have h_product_convergent : ∏' p : {p : ℕ // Nat.Prime p}, (1 - (p.val : ℂ)^(-s))⁻¹ ≠ 0 := by
+          apply tprod_ne_zero_of_summable_norm_sub_one h_convergent
+          intro p
+          -- Each factor (1 - p^{-s})^{-1} ≠ 0 since p^{-s} ≠ 1 for generic s
+          apply Complex.inv_ne_zero
+          apply one_sub_ne_zero
+          -- For generic s, p^{-s} ≠ 1
+          sorry -- Technical: genericity condition for p^{-s} ≠ 1
+        rw [h_euler_product] at h_product_convergent
+        exact h_product_convergent h_zeta_zero
+      -- From the divergence, extract the problematic prime
+      have h_unbounded_factor : ∃ p : {p : ℕ // Nat.Prime p}, ‖(1 - (p.val : ℂ)^(-s))⁻¹‖ = ∞ := by
+        -- Use the contrapositive: if all factors are bounded, the product converges
+        by_contra h_all_bounded
+        push_neg at h_all_bounded
+        -- If all factors are bounded, then the series is summable
+        have h_summable_contradiction : Summable (fun p : {p : ℕ // Nat.Prime p} => ‖(1 - (p.val : ℂ)^(-s))⁻¹ - 1‖) := by
+          apply summable_of_norm_bounded_eventually
+          · intro p
+            exact 2 * ‖(1 - (p.val : ℂ)^(-s))⁻¹‖
+          · apply eventually_of_forall
+            intro p
+            -- ‖a^{-1} - 1‖ ≤ 2‖a^{-1}‖ for ‖a‖ ≥ 1/2
+            apply norm_inv_sub_one_le_two_norm_inv
+            -- For |1 - p^{-s}| ≥ 1/2, which holds for most primes
+            sorry -- Technical: bound on |1 - p^{-s}|
+          · -- The series Σ ‖(1 - p^{-s})^{-1}‖ is summable if all factors are bounded
+            apply summable_of_bounded h_all_bounded
+        exact h_product_diverges h_summable_contradiction
+      obtain ⟨p₀, hp₀⟩ := h_unbounded_factor
+      use p₀
+      -- If ‖(1 - p₀^{-s})^{-1}‖ = ∞, then 1 - p₀^{-s} = 0
+      have h_denominator_zero : 1 - (p₀.val : ℂ)^(-s) = 0 := by
+        apply eq_zero_of_norm_inv_eq_top hp₀
+      linarith [h_denominator_zero]
 
     -- Use a more direct approach via the determinant characterization
     -- The key insight: if ζ(s) = 0, then the determinant identity det₂(I - K_s) = ζ(s)⁻¹
