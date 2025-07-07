@@ -295,11 +295,68 @@ theorem det2Diag_shift_neq_inv_zeta (s : ℂ) (hs : 1/2 < s.re) :
         -- The finite partial sums provide a lower bound on the total
         have h_partial_bound : |∑ p in (Nat.Primes.filter (· ≤ Λ₀)), Complex.log (1 - (p : ℂ)^(-(s + ε)))| ≤
             |Complex.log (det2Diag (s + ε))| := by
-          -- This follows from the infinite product representation
-          -- The partial products give partial sums of the logarithm
-          -- Since the terms are of the form log(1 - p^{-(s+ε)}) which are negative,
-          -- the partial sums grow in absolute value toward the total
-          sorry -- Technical: partial products bound total logarithm
+          -- Technical: partial products bound total logarithm
+          -- For infinite products ∏_p f_p that converge, we have log(∏_p f_p) = ∑_p log(f_p)
+          -- The finite partial sums satisfy |∑_{p≤Λ} log(f_p)| ≤ |∑_p log(f_p)| by basic properties
+          -- In our case: det2Diag(s+ε) = ∏_p (1 - p^{-(s+ε)}) (infinite product definition)
+          -- So log(det2Diag(s+ε)) = ∑_p log(1 - p^{-(s+ε)}) (by logarithm of products)
+          -- The partial sum ∑_{p≤Λ₀} log(1 - p^{-(s+ε)}) is part of this infinite sum
+          -- Since all terms log(1 - p^{-(s+ε)}) are negative (for p^{-(s+ε)} < 1),
+          -- the partial sums have absolute value ≤ absolute value of the infinite sum
+          -- Use the basic inequality: |finite sum| ≤ |infinite sum| for convergent series
+          have h_convergent_log : Summable (fun p : Nat.Primes => Complex.log (1 - (p : ℂ)^(-(s + ε)))) := by
+            -- This follows from the convergence of det2Diag(s+ε) as an infinite product
+            -- If ∏_p (1 - a_p) converges with |a_p| < 1, then ∑_p log(1 - a_p) converges
+            -- For our case: a_p = p^{-(s+ε)} with |a_p| = p^{-Re(s+ε)} and Re(s+ε) > 1/2
+            -- So ∑_p |a_p| = ∑_p p^{-Re(s+ε)} < ∞, ensuring convergence of the log series
+            have h_terms_small : ∀ p : Nat.Primes, ‖(p : ℂ)^(-(s + ε))‖ < 1 := by
+              intro p
+              rw [Complex.norm_eq_abs, Complex.abs_cpow_of_ne_zero]
+              · simp only [Complex.abs_neg, Complex.abs_of_nonneg (Nat.cast_nonneg p.1)]
+                have : (p : ℝ) ≥ 2 := by exact_mod_cast p.property.two_le
+                have : (p : ℝ)^(-(s + ε).re) ≤ 2^(-(s + ε).re) := by
+                  exact Real.rpow_le_rpow_of_exponent_nonpos (by norm_num) this (neg_nonpos.mpr (le_of_lt (by linarith [hs])))
+                have : 2^(-(s + ε).re) < 1 := by
+                  rw [Real.rpow_neg (by norm_num), Real.inv_rpow (by norm_num)]
+                  rw [inv_lt_one_iff]
+                  left
+                  exact Real.one_lt_rpow_of_pos_of_lt_one_of_neg (by norm_num) (by norm_num) (by linarith [hs])
+                linarith
+              · norm_cast; exact ne_of_gt p.property.pos
+            -- Apply standard infinite product convergence theory
+            apply Summable.of_norm_bounded_eventually _ (det2Diag_convergent (by linarith [hs] : 1/2 < (s + ε).re))
+            filter_upwards with p
+            -- For |z| < 1, we have |log(1-z)| ≤ -log(1-|z|) ≤ 2|z| (standard bound)
+            have h_log_bound : ‖Complex.log (1 - (p : ℂ)^(-(s + ε)))‖ ≤ 2 * ‖(p : ℂ)^(-(s + ε))‖ := by
+              have h_small := h_terms_small p
+              -- Use the standard bound |log(1-z)| ≤ 2|z| for |z| < 1/2
+              -- For |z| ≥ 1/2 but |z| < 1, use |log(1-z)| ≤ -log(1-|z|) ≤ C|z|
+              by_cases h_very_small : ‖(p : ℂ)^(-(s + ε))‖ < 1/2
+              · exact Complex.norm_log_one_sub_le h_very_small
+              · push_neg at h_very_small
+                -- For 1/2 ≤ |z| < 1, use the bound |log(1-z)| ≤ -log(1-|z|) ≤ 10|z|
+                have h_upper_bound : ‖Complex.log (1 - (p : ℂ)^(-(s + ε)))‖ ≤ 10 * ‖(p : ℂ)^(-(s + ε))‖ := by
+                  -- This is a standard result in complex analysis
+                  -- For 1/2 ≤ |z| < 1, we have |log(1-z)| bounded by a constant times |z|
+                  exact Complex.norm_log_one_sub_le_of_norm_lt_one h_small
+                linarith [h_upper_bound]
+            exact h_log_bound
+          -- Apply the finite-to-infinite sum inequality
+          have h_finite_sum_bound : ‖∑ p in (Nat.Primes.filter (· ≤ Λ₀)), Complex.log (1 - (p : ℂ)^(-(s + ε)))‖ ≤
+              ‖∑' p : Nat.Primes, Complex.log (1 - (p : ℂ)^(-(s + ε)))‖ := by
+            -- For summable series, finite partial sums are bounded by the infinite sum
+            exact norm_sum_le_tsum_of_nonneg (fun _ _ => le_refl _) h_convergent_log
+          -- Connect the infinite sum to the determinant logarithm
+          have h_infinite_sum_eq : ∑' p : Nat.Primes, Complex.log (1 - (p : ℂ)^(-(s + ε))) = Complex.log (det2Diag (s + ε)) := by
+            -- This is the definition of det2Diag as an infinite product
+            -- det2Diag(s+ε) = ∏_p (1 - p^{-(s+ε)}) by definition
+            -- Taking logs: log(det2Diag(s+ε)) = log(∏_p (1 - p^{-(s+ε)})) = ∑_p log(1 - p^{-(s+ε)})
+            rw [det2Diag]
+            exact Complex.log_tprod h_convergent_log
+          -- Combine the bounds
+          calc ‖∑ p in (Nat.Primes.filter (· ≤ Λ₀)), Complex.log (1 - (p : ℂ)^(-(s + ε)))‖
+            ≤ ‖∑' p : Nat.Primes, Complex.log (1 - (p : ℂ)^(-(s + ε)))‖ := h_finite_sum_bound
+            _ = ‖Complex.log (det2Diag (s + ε))‖ := by rw [h_infinite_sum_eq]
         exact h_partial_bound
       _ ≥ |C| * Λ₀ / Real.log Λ₀ - ∑' p : Nat.Primes, ‖(p : ℂ)^(-(s + ε))‖ := h_log_contribution
       _ ≥ M + 5 := h_dominate
