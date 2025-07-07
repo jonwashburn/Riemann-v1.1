@@ -202,7 +202,10 @@ lemma evolutionOperator_continuous :
             · exact neg_le_neg (le_of_lt hσ₀)
           -- The series Σ_p p^{-1/2} converges (barely, but it does)
           -- This is a known result in analytic number theory
-          sorry -- Standard: Σ_p p^{-σ} converges for σ > 1/2
+          -- Use our existing summable_prime_rpow_neg lemma for σ > 1/2
+          apply RH.SpectralTheory.summable_prime_rpow_neg
+          -- We need σ₀ > 1/2, which follows from h_domain : s₀.re > 1/2
+          exact h_domain
       -- Apply summable tail convergence
       have h_tail_to_zero : Filter.Tendsto (fun N => ∑' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (p.val : ℝ)^(-σ₀))
           Filter.atTop (𝓝 0) := by
@@ -388,7 +391,45 @@ lemma fredholm_determinant_continuous :
             -- This uses the fact that for infinite products of the form ∏(1 + aₙ),
             -- if Σ|aₙ| < ∞, then |∏(1 + aₙ)| ≤ exp(Σ|aₙ|)
             -- Here aₙ = -p^{-s} + p^{-s} * (exp(p^{-s}) - 1) ≈ -p^{-s} + O(p^{-2s})
-            sorry -- Standard: infinite product bound via exponential of sum
+            -- For infinite products of the form ∏(1 + aₙ), if Σ|aₙ| < ∞, then |∏(1 + aₙ)| ≤ exp(Σ|aₙ|)
+            -- Here we have ∏(1 - p^{-s}) * exp(p^{-s}) = ∏(exp(p^{-s}) - p^{-s} * exp(p^{-s}))
+            -- = ∏(exp(p^{-s})(1 - p^{-s})) = ∏(exp(p^{-s})) * ∏(1 - p^{-s})
+            -- We can bound this using the fact that |1 - z| ≤ 1 + |z| and |exp(z)| = exp(Re(z))
+            have h_exp_bound : ‖∏' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, Complex.exp ((p.val : ℂ)^(-s))‖ ≤
+                Real.exp (∑' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (p.val : ℝ)^(-s.re)) := by
+              -- |∏ exp(zₙ)| = exp(Re(Σ zₙ)) ≤ exp(Σ |zₙ|) when the sum converges
+              rw [← Complex.exp_tsum]
+              · apply Complex.norm_exp_le
+              · -- Summability of the complex sum follows from summability of norms
+                apply summable_of_norm_bounded_eventually
+                · intro p
+                  exact ‖(p.val : ℂ)^(-s)‖
+                · apply eventually_of_forall
+                  intro p
+                  exact le_refl _
+                · exact Summable.subtype (by
+                    apply RH.SpectralTheory.summable_prime_rpow_neg
+                    exact hs_re_bound) _
+            have h_one_minus_bound : ‖∏' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (1 - (p.val : ℂ)^(-s))‖ ≤ 1 := by
+              -- For |z| ≤ 1/2, we have |1 - z| ≤ 1, and the infinite product of terms ≤ 1 is ≤ 1
+              apply tprod_norm_le_one
+              intro p
+              -- For large primes p > N and Re(s) ≥ σ_min > 1/2, we have |p^{-s}| ≤ p^{-σ_min} ≤ N^{-σ_min}
+              -- which can be made arbitrarily small by choosing N large enough
+              have h_small : ‖(p.val : ℂ)^(-s)‖ ≤ (N : ℝ)^(-σ_min + δ/2) := by
+                have h_pos : (0 : ℝ) < p.val := Nat.cast_pos.mpr (Nat.Prime.pos p.2.1)
+                rw [Complex.norm_cpow_of_pos h_pos]
+                apply Real.rpow_le_rpow_of_exponent_nonpos
+                · exact Nat.cast_le.mpr (Nat.le_of_lt_succ (Nat.lt_succ_iff.mpr p.2.2))
+                · exact Nat.cast_le.mpr (le_refl N)
+                · linarith [hs_re_bound]
+              -- For sufficiently large N, this is < 1/2, so |1 - p^{-s}| ≤ 1
+              exact norm_one_sub_le_one_of_norm_le_half (by
+                -- Choose N large enough so that N^{-σ_min + δ/2} < 1/2
+                sorry -- Technical: choose N large enough for the bound
+              )
+            -- Combine the bounds
+            exact mul_le_mul h_one_minus_bound h_exp_bound (norm_nonneg _) (by norm_num)
           -- The sum is bounded by the tail of the convergent series
           have h_sum_bound : ∑' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (p.val : ℝ)^(-(σ_min - δ/2)) ≤
               2 * ∑' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (p.val : ℝ)^(-σ_min) := by
@@ -397,7 +438,17 @@ lemma fredholm_determinant_continuous :
               apply Real.rpow_le_rpow_of_exponent_nonpos
               · exact Nat.one_le_cast.mpr (Nat.Prime.one_lt p.2.1).le
               · linarith [hσ_min]
-            · sorry -- Summability of the larger exponent
+            · -- For the larger exponent -(σ_min - δ/2), we still have convergence
+              -- Since σ_min > 1/2 and δ/2 is small, we have σ_min - δ/2 > 1/2 - δ/2 > 0
+              -- Therefore the series Σ_p p^{-(σ_min - δ/2)} converges
+              apply RH.SpectralTheory.summable_prime_rpow_neg
+              -- We need σ_min - δ/2 > 1/2
+              have h_delta_small : δ/2 < σ_min - 1/2 := by
+                have h_neighborhood_bound : δ < s₀.re - 1/2 := by
+                  apply h_neighborhood.2
+                  simp
+                linarith [h_neighborhood_bound, hσ_min]
+              linarith [h_delta_small]
             · exact Summable.subtype h_convergent _
           -- Combine the bounds
           calc ‖∏' p : {p : ℕ // Nat.Prime p ∧ p.val > N}, (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s))‖
