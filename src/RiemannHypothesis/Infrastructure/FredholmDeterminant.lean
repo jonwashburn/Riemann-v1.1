@@ -22,7 +22,7 @@ noncomputable def evolutionEigenvalues (s : ℂ) : {p : ℕ // Nat.Prime p} → 
 noncomputable def DiagonalOperator (eigenvalues : {p : ℕ // Nat.Prime p} → ℂ)
     (h_bounded : ∃ C : ℝ, ∀ p, ‖eigenvalues p‖ ≤ C) : WeightedL2 →L[ℂ] WeightedL2 := by
   -- Extract the bound
-  obtain ⟨C, hC⟩ := h_bounded
+          obtain ⟨C, hC⟩ := h_bounded
   -- Define the linear map T: pointwise multiplication by eigenvalues
   let T : WeightedL2 →ₗ[ℂ] WeightedL2 := {
     toFun := fun x => fun p => eigenvalues p * x p
@@ -51,7 +51,7 @@ noncomputable def DiagonalOperator (eigenvalues : {p : ℕ // Nat.Prime p} → �
       exact mul_le_mul_of_nonneg_right (hC p) (norm_nonneg _)
     -- Square both sides: ‖(T x) p‖² ≤ C² * ‖x p‖²
     have h_sq_bound : ∀ p, ‖(T x) p‖ ^ 2 ≤ C ^ 2 * ‖x p‖ ^ 2 := by
-      intro p
+            intro p
       have h_comp := h_component_bound p
       rw [← pow_two, ← pow_two]
       rw [← mul_pow]
