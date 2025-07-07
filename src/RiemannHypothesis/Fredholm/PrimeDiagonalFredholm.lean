@@ -68,7 +68,13 @@ lemma det2Diag_eq_inv_zeta {s : ℂ} (hσ : 1 < s.re) :
     rw [← h_prod]
     -- Now we need (∏' p (1 - p^{-s})⁻¹)⁻¹ = ∏' p (1 - p^{-s})
     -- This requires showing the product converges and using properties of infinite products
-    sorry
+    -- Use the fact that for convergent infinite products: (∏ aᵢ)⁻¹ = ∏ aᵢ⁻¹
+    -- We have ζ(s) = ∏' p (1 - p^{-s})⁻¹, so ζ(s)⁻¹ = (∏' p (1 - p^{-s})⁻¹)⁻¹
+    -- For convergent products, this equals ∏' p ((1 - p^{-s})⁻¹)⁻¹ = ∏' p (1 - p^{-s})
+    rw [← tprod_inv]
+    congr 1
+    ext p
+    simp [inv_inv]
   exact h_det
 
 end RH.Fredholm

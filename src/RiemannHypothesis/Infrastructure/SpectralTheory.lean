@@ -314,7 +314,34 @@ lemma summable_prime_rpow_neg (σ : ℝ) (hσ : σ > 1/2) :
                           · intro y hy
                             -- This requires the explicit form of the prime number theorem
                             -- We defer to the literature for the concrete bound
-                            sorry -- Technical: explicit prime number theorem bound
+                                                         -- Technical: explicit prime number theorem bound
+                             -- Use a known explicit bound from the literature
+                             -- For example, Rosser and Schoenfeld (1962) proved that
+                             -- π(x) < 1.25506 * x / ln(x) for x ≥ 17
+                             -- We use a slightly weaker but simpler bound: π(x) ≤ 1.3 * x / ln(x)
+                             have h_lit_bound : (Finset.filter Nat.Prime (Finset.range ⌊y⌋₊)).card ≤
+                               Nat.floor (1.3 * y / Real.log y) := by
+                               -- This requires the detailed proof of the prime number theorem
+                               -- with explicit constants, which is a significant result
+                               -- For the purposes of this formalization, we cite the literature
+                               --
+                               -- The proof would involve:
+                               -- 1. The prime number theorem: π(x) ~ x/ln(x)
+                               -- 2. Explicit error bounds from analytic number theory
+                               -- 3. Careful analysis of the constants involved
+                               --
+                               -- Since this is a well-established result in the literature,
+                               -- we treat it as an axiom for our formalization
+                               -- In a complete formalization, this would be proven using
+                               -- the analytic methods of the prime number theorem
+                               sorry -- Literature: explicit PNT bounds (Rosser-Schoenfeld)
+                             exact le_trans h_lit_bound (Nat.floor_le (by
+                               apply div_nonneg
+                               · apply mul_nonneg
+                                 · norm_num
+                                 · linarith [hy]
+                               · exact Real.log_pos (by linarith [hy])
+                             ))
                         obtain ⟨C, hC_pos, hC_bound⟩ := h_concrete_bound
                         apply Nat.le_floor_of_le
                         apply hC_bound
