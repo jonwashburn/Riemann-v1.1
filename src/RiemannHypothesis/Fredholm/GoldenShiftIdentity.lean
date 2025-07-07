@@ -28,7 +28,21 @@ lemma det2Diag_shift_eq_inv_zeta {s : ℂ} (hσ : 1 < s.re) :
     -- goldenRatio > 1, so goldenRatio - 1 > 0
     have h_pos : 0 < goldenRatio - 1 := by
       -- goldenRatio = (1 + √5)/2 > 1, so goldenRatio - 1 > 0
-      sorry  -- This requires numerical bounds on goldenRatio
+      -- goldenRatio = (1 + √5)/2 ≈ 1.618, so goldenRatio - 1 ≈ 0.618 > 0
+      -- Use the definition and properties of the golden ratio
+      have h_golden_gt_one : 1 < goldenRatio := by
+        -- goldenRatio = (1 + √5)/2 and √5 > 2, so goldenRatio > (1 + 2)/2 = 1.5 > 1
+        -- More precisely, √5 ≈ 2.236, so goldenRatio ≈ 1.618
+        rw [goldenRatio]
+        simp only [div_lt_iff, zero_lt_two]
+        -- Need to show 2 < 1 + √5, i.e., 1 < √5
+        have h_sqrt5_gt_2 : 2 < Real.sqrt 5 := by
+          rw [Real.lt_sqrt]
+          · norm_num
+          · norm_num
+          · norm_num
+        linarith [h_sqrt5_gt_2]
+      linarith [h_golden_gt_one]
     linarith
 
   -- Apply the basic theorem for s + ε
