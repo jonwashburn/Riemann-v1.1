@@ -6,6 +6,8 @@ import RiemannHypothesis.Infrastructure.GoldenRatioBasics
 import Mathlib.NumberTheory.LSeries.RiemannZeta
 import Mathlib.NumberTheory.SumPrimeReciprocals
 import Mathlib.NumberTheory.EulerProduct.DirichletLSeries
+import Mathlib.Analysis.Asymptotics.AsymptoticEquivalent
+import Mathlib.Analysis.Normed.Group.Basic
 
 /-!
 # Prime-diagonal Fredholm determinant versus the Riemann zeta function
