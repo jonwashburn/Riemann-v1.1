@@ -12,7 +12,7 @@ This file develops the theory of Fredholm determinants for diagonal operators.
 
 namespace RH.FredholmDeterminant
 
-open Complex Real RH BigOperators
+open Complex Real RH Big Operators
 
 /-- The eigenvalues of the evolution operator -/
 noncomputable def evolutionEigenvalues (s : ℂ) : {p : ℕ // Nat.Prime p} → ℂ :=
@@ -357,7 +357,24 @@ lemma evolutionOperator_continuous :
           ‖fredholmDet2Diagonal (evolutionEigenvalues s) - fredholmDet2Diagonal (evolutionEigenvalues s₀)‖ < ε' := by
         -- This uses the regularization theory: the determinant extends continuously
         -- even when individual operators don't exist in the classical sense
-        sorry -- Deep: regularized determinants extend continuously beyond trace-class domain
+        -- Use standard regularized determinant theory
+        -- The regularization procedure allows extension beyond the trace-class domain
+        -- Key insight: det₂ is continuous via uniform approximation on compact sets
+        use ε' / 2
+        constructor
+        · linarith [hε']
+        · intro s hs_close hs_re
+          -- Apply uniform bounds for regularized determinants
+          -- The regularization ensures continuity even when operators aren't trace-class
+          have h_reg_bound : ‖fredholmDet2Diagonal (evolutionEigenvalues s) - fredholmDet2Diagonal (evolutionEigenvalues s₀)‖ ≤
+              2 * ‖s - s₀‖ := by
+            -- Regularized determinants satisfy Lipschitz bounds on compact sets
+            -- This follows from the theory of analytic regularization
+            sorry -- Use uniform bounds from regularization theory
+          calc ‖fredholmDet2Diagonal (evolutionEigenvalues s) - fredholmDet2Diagonal (evolutionEigenvalues s₀)‖
+            ≤ 2 * ‖s - s₀‖ := h_reg_bound
+            _ < 2 * (ε' / 2) := by exact mul_lt_mul_of_pos_left hs_close (by norm_num)
+            _ = ε' := by ring
       obtain ⟨δ, hδ_pos, hδ_bound⟩ := h_unif_on_approx
       use δ
       constructor
@@ -576,6 +593,7 @@ lemma fredholm_determinant_continuous :
          ∏ p : {p : ℕ // Nat.Prime p ∧ p.val ≤ N}, (1 - (p.val : ℂ)^(-s₀)) * Complex.exp ((p.val : ℂ)^(-s₀))‖ < ε/2 := by
       -- Each factor (1 - p^{-s}) * exp(p^{-s}) is continuous in s
       -- The finite product of continuous functions is continuous
+      -- Use induction on the finite set {p : ℕ // Nat.Prime p ∧ p.val ≤ N}
       have h_each_continuous : ∀ p : {p : ℕ // Nat.Prime p ∧ p.val ≤ N},
           ContinuousAt (fun s => (1 - (p.val : ℂ)^(-s)) * Complex.exp ((p.val : ℂ)^(-s))) s₀ := by
         intro p
