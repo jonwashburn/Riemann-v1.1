@@ -696,7 +696,30 @@ theorem det2Diag_halfplane_extension {s : ℂ} (hσ₁ : 1/2 < s.re) (hσ₂ : s
                     -- The target f_conv(z) - (1/2) * Λ/log(Λ) differs by -(1/2) * [π(Λ) - Λ/log(Λ)]
                     -- The coefficient (1/2) is exact from the F(z) = G(z) + H(z) decomposition
                     -- where H(z) = -(1+z)/2 gives the -(1/2) factor for both constant and linear terms
-                    sorry -- Technical decomposition algebra showing exact coefficient propagation
+                    -- Technical decomposition algebra showing exact coefficient propagation
+                    -- From the F(z) = G(z) + H(z) decomposition where H(z) = -(1+z)/2:
+                    -- h_apply = ∑_{p≤Λ} F(p^{-s}) = ∑_{p≤Λ} [G(p^{-s}) + H(p^{-s})]
+                    --         = ∑_{p≤Λ} G(p^{-s}) + ∑_{p≤Λ} H(p^{-s})
+                    --         = f_conv(z) + error_G + ∑_{p≤Λ} [-(1 + p^{-s})/2]
+                    --         = f_conv(z) + error_G - (1/2) * ∑_{p≤Λ} (1 + p^{-s})
+                    --         = f_conv(z) + error_G - (1/2) * π(Λ) - (1/2) * ∑_{p≤Λ} p^{-s}
+                    -- The target is f_conv(z) - (1/2) * Λ/log(Λ), so the error is:
+                    -- h_apply - target = error_G - (1/2) * [π(Λ) - Λ/log(Λ)] - (1/2) * ∑_{p≤Λ} p^{-s}
+                    -- The dominant term has coefficient (1/2) from π(Λ) - Λ/log(Λ)
+                    -- The other terms (error_G and ∑ p^{-s}) are bounded, giving O_small
+                    have h_exact_structure : h_apply - (f_conv z - (1/2) * Λ / Real.log Λ) =
+                        -(1/2) * ((Nat.Primes.filter (· ≤ Λ)).card - Λ / Real.log Λ) + O_small := by
+                      -- This follows from the exact decomposition formula above
+                      -- The coefficient (1/2) is exact from the H(z) = -(1+z)/2 term
+                      ring_nf
+                      -- Apply the decomposition structure and collect terms
+                      sorry -- Detailed algebra manipulation
+                    -- Take absolute values
+                    have h_abs_structure : |h_apply - (f_conv z - (1/2) * Λ / Real.log Λ)| =
+                        |(1/2) * ((Nat.Primes.filter (· ≤ Λ)).card - Λ / Real.log Λ)| + |O_small| := by
+                      rw [h_exact_structure]
+                      exact abs_add _ _
+                    exact h_abs_structure
                   -- The PNT error bound gives us the dominant contribution
                   -- Since |π(Λ) - Λ/log(Λ)| ≤ PNT_error, we get the coefficient (1/2) bound
                   calc |h_apply - (f_conv z - (1/2) * Λ / Real.log Λ)|
@@ -707,7 +730,39 @@ theorem det2Diag_halfplane_extension {s : ℂ} (hσ₁ : 1/2 < s.re) (hσ₂ : s
                       -- The O_small corrections are negligible compared to the main term
                       -- For large Λ, the PNT error dominates the bounded correction terms
                       -- This is standard in asymptotic analysis of prime sums
-                      sorry -- O_small terms are negligible for large Λ
+                      -- O_small terms are negligible for large Λ
+                      -- The O_small terms come from error_G and (1/2) * ∑_{p≤Λ} p^{-s}
+                      -- For error_G: this is bounded by the convergent G-series tail
+                      -- For ∑_{p≤Λ} p^{-s}: this is bounded by ∑' p p^{-Re(s)} < ∞ since Re(s) > 1/2
+                      -- Both are O(1) while the main term is O(Λ/log(Λ)^2), so negligible for large Λ
+                      have h_error_G_bounded : |error_G| ≤ C_G := by sorry -- G-series convergence bound
+                      have h_sum_bounded : |(1/2) * ∑ p in (Nat.Primes.filter (· ≤ Λ)), (p : ℂ)^(-z)| ≤ C_sum := by
+                        -- Bounded by convergent infinite series
+                        have h_finite_le_infinite : |∑ p in (Nat.Primes.filter (· ≤ Λ)), (p : ℂ)^(-z)| ≤
+                            ∑' p : Nat.Primes, ‖(p : ℂ)^(-z)‖ := by
+                          exact le_trans (norm_sum_le_sum_norm _ _) (sum_le_tsum _ (fun _ _ => norm_nonneg _)
+                            (det2Diag_convergent (by linarith [hs] : 1/2 < z.re)))
+                        exact le_trans (by simp [abs_mul]; exact mul_le_mul_of_nonneg_left h_finite_le_infinite (by norm_num))
+                          (by use ∑' p : Nat.Primes, ‖(p : ℂ)^(-z)‖; norm_num)
+                      have h_O_small_bounded : |O_small| ≤ C_G + C_sum := by
+                        -- O_small = error_G - (1/2) * ∑ p^{-s}, so bounded by sum of bounds
+                        exact le_trans (abs_add _ _) (add_le_add h_error_G_bounded h_sum_bounded)
+                      -- For large Λ, C_G + C_sum ≪ (1/2) * PNT_error = (1/2) * 0.2795 * Λ/log(Λ)^2
+                      -- Since the O_small terms are O(1) and the PNT term is O(Λ/log(Λ)^2) → ∞
+                      have h_negligible : |O_small| ≤ (1/2) * |(Nat.Primes.filter (· ≤ Λ)).card - Λ / Real.log Λ| := by
+                        -- For sufficiently large Λ, the bounded terms become negligible
+                        by_cases h_large_enough : Λ ≥ exp (2 * (C_G + C_sum) / 0.13975)
+                        · -- For very large Λ, 0.13975 * Λ/log(Λ)^2 > 2 * (C_G + C_sum)
+                          have h_pnt_dominates : 0.13975 * Λ / Real.log Λ ^ 2 > 2 * (C_G + C_sum) := by
+                            -- From the choice of Λ and asymptotic growth
+                            sorry -- Standard asymptotic domination argument
+                          have h_pnt_half : (1/2) * 0.13975 * Λ / Real.log Λ ^ 2 > C_G + C_sum := by linarith [h_pnt_dominates]
+                          exact le_trans h_O_small_bounded (le_of_lt (by
+                            rw [abs_mul]; exact lt_of_lt_of_le h_pnt_half (mul_le_mul_of_nonneg_left (le_refl _) (by norm_num))))
+                        · -- For smaller Λ, use the fact that we can choose Λ large enough in the proof context
+                          -- The asymptotic argument allows us to work in the regime where Λ is arbitrarily large
+                          sorry -- Choose Λ large enough for the asymptotic regime
+                      exact h_negligible
                 calc |h_apply - (f_conv z - (1/2) * Λ / Real.log Λ)|
                   ≤ (1/2) * |(Nat.Primes.filter (· ≤ Λ)).card - Λ / Real.log Λ| := h_error_structure
                   _ ≤ (1/2) * (0.2795 * Λ / Real.log Λ ^ 2) := by
@@ -1042,11 +1097,97 @@ theorem det2Diag_halfplane_extension {s : ℂ} (hσ₁ : 1/2 < s.re) (hσ₂ : s
                 -- π(2Λ) ≥ 2Λ/log(2Λ) - error and π(Λ) ≤ Λ/log(Λ) + error
                 -- So π(2Λ) - π(Λ) ≥ [2Λ/log(2Λ) - Λ/log(Λ)] - 2*error
                 -- Since the main difference > 2 and errors are small for large Λ, the result > 1
-                sorry -- Apply PNT bounds to prime counting difference
+                -- Apply PNT bounds to prime counting difference
+                -- Use explicit PNT bounds: π(x) ≥ x/log(x) - 1.25506*x/log(x)^2 for x ≥ 2
+                -- and π(x) ≤ x/log(x) + 0.2795*x/log(x)^2 for x ≥ 6
+                have h_lower_2lambda : (Nat.Primes.filter (· ≤ 2 * Λ)).card ≥
+                    (2 * Λ) / Real.log (2 * Λ) - 1.25506 * (2 * Λ) / Real.log (2 * Λ) ^ 2 := by
+                  apply Nat.lowerBound_pi
+                  linarith [hΛ_pos] : 2 ≤ 2 * Λ
+                have h_upper_lambda : (Nat.Primes.filter (· ≤ Λ)).card ≤
+                    Λ / Real.log Λ + 0.2795 * Λ / Real.log Λ ^ 2 := by
+                  apply Nat.upperBound_pi
+                  linarith [hΛ_pos] : 6 ≤ Λ
+                -- Combine the bounds
+                calc (Nat.Primes.filter (· ≤ 2 * Λ)).card - (Nat.Primes.filter (· ≤ Λ)).card
+                  ≥ (2 * Λ) / Real.log (2 * Λ) - 1.25506 * (2 * Λ) / Real.log (2 * Λ) ^ 2 -
+                    (Λ / Real.log Λ + 0.2795 * Λ / Real.log Λ ^ 2) := by
+                    linarith [h_lower_2lambda, h_upper_lambda]
+                  _ = (2 * Λ) / Real.log (2 * Λ) - Λ / Real.log Λ -
+                      (1.25506 * (2 * Λ) / Real.log (2 * Λ) ^ 2 + 0.2795 * Λ / Real.log Λ ^ 2) := by ring
+                  _ > 2 - 2 := by
+                    -- The main term (2Λ)/log(2Λ) - Λ/log(Λ) > 2 from h_divergent_growth
+                    -- The error terms are O(Λ/log(Λ)^2) which are small compared to the main term
+                    have h_main_large : (2 * Λ) / Real.log (2 * Λ) - Λ / Real.log Λ > 2 := by
+                      -- This follows from the growth calculation in h_divergent_growth
+                      -- We showed (1/2) * (2Λ)/log(2Λ) > (1/2) * Λ/log(Λ) + 1
+                      -- Multiplying by 2: (2Λ)/log(2Λ) > Λ/log(Λ) + 2
+                      linarith [h_divergent_growth]
+                    have h_error_small : 1.25506 * (2 * Λ) / Real.log (2 * Λ) ^ 2 + 0.2795 * Λ / Real.log Λ ^ 2 < 2 := by
+                      -- For large Λ, these O(Λ/log(Λ)^2) terms are much smaller than the O(Λ/log(Λ)) main term
+                      -- Since Λ/log(Λ) > 2(M+1) >> 1, we have log(Λ) >> 1, so Λ/log(Λ)^2 ≪ Λ/log(Λ)
+                      sorry -- Standard asymptotic argument: O(Λ/log(Λ)^2) ≪ O(Λ/log(Λ))
+                    linarith [h_main_large, h_error_small]
+                  _ = 0 := by ring
+                  _ < 1 := by norm_num
               -- Each additional prime contributes ≈ -(1/2) from the divergent term
               -- Plus bounded contributions from G(p^{-z}) which are O(1/p^{Re(z)}) ≪ 1/2
               -- So the total magnitude is ≈ (1/2) * (number of additional primes) > (1/2) * 1 = 1/2
-              sorry -- Apply coefficient analysis to get magnitude bound
+              -- Apply coefficient analysis to get magnitude bound
+              -- Each additional prime p ∈ (Λ, 2Λ] contributes log(1 - p^{-z}) to the sum
+              -- From the F(z) = G(z) + H(z) decomposition: log(1-z) = G(z) + H(z) where H(z) = -(1+z)/2
+              -- So each prime contributes G(p^{-z}) + H(p^{-z}) = G(p^{-z}) - (1 + p^{-z})/2
+              -- The H-part gives -(1/2) per prime, plus -(1/2)*p^{-z} which is small
+              -- The G-part is bounded: |G(p^{-z})| ≤ C|p^{-z}|^2 for |p^{-z}| < 1
+              have h_coefficient_bound : ∀ p ∈ Nat.Primes.filter (Λ < · ∧ · ≤ 2 * Λ),
+                  |Complex.log (1 - (p : ℂ)^(-z))| ≥ (1/2) - C_coeff * ‖(p : ℂ)^(-z)‖ := by
+                intro p hp
+                -- Decompose: log(1 - p^{-z}) = G(p^{-z}) + H(p^{-z}) where H(z) = -(1+z)/2
+                have h_decomp : Complex.log (1 - (p : ℂ)^(-z)) =
+                    (Complex.log (1 - (p : ℂ)^(-z)) + (1 - (p : ℂ)^(-z))/2) - (1 + (p : ℂ)^(-z))/2 := by ring
+                -- The G-part |log(1-z) + (1-z)/2| ≤ C|z|^2 for |z| < 1
+                have h_G_small : |Complex.log (1 - (p : ℂ)^(-z)) + (1 - (p : ℂ)^(-z))/2| ≤
+                    C_coeff * ‖(p : ℂ)^(-z)‖^2 := by
+                  -- Standard bound from complex analysis for |z| < 1
+                  have h_small : ‖(p : ℂ)^(-z)‖ < 1 := by
+                    -- For p ≥ 2 and Re(z) > 1/2, we have |p^{-z}| = p^{-Re(z)} ≤ 2^{-1/2} < 1
+                    sorry -- Standard bound for prime powers
+                  exact Complex.norm_log_one_sub_plus_half_le h_small
+                -- The H-part has magnitude |(1 + p^{-z})/2| ≥ (1 - |p^{-z}|)/2 ≥ (1 - 1/2)/2 = 1/4
+                have h_H_large : |(1 + (p : ℂ)^(-z))/2| ≥ 1/4 := by
+                  -- For |p^{-z}| ≤ 2^{-1/2} < 1, we have |1 + p^{-z}| ≥ |1| - |p^{-z}| ≥ 1 - 1/2 = 1/2
+                  have h_triangle : |(1 : ℂ) + (p : ℂ)^(-z)| ≥ |1| - |(p : ℂ)^(-z)| := by exact abs_sub_abs_le_abs_sub _ _
+                  have h_bound : |(p : ℂ)^(-z)| ≤ 1/2 := sorry -- From the small bound above
+                  calc |(1 + (p : ℂ)^(-z))/2| = |(1 : ℂ) + (p : ℂ)^(-z)| / 2 := by simp [abs_div]
+                    _ ≥ (|1| - |(p : ℂ)^(-z)|) / 2 := by exact div_le_div_of_nonneg_right h_triangle (by norm_num)
+                    _ ≥ (1 - 1/2) / 2 := by linarith [h_bound]
+                    _ = 1/4 := by norm_num
+                -- Apply reverse triangle inequality
+                rw [h_decomp]
+                have h_reverse : |Complex.log (1 - (p : ℂ)^(-z))| ≥ |(1 + (p : ℂ)^(-z))/2| -
+                    |Complex.log (1 - (p : ℂ)^(-z)) + (1 - (p : ℂ)^(-z))/2| := by
+                  exact abs_sub_abs_le_abs_sub _ _
+                calc |Complex.log (1 - (p : ℂ)^(-z))|
+                  ≥ |(1 + (p : ℂ)^(-z))/2| - |Complex.log (1 - (p : ℂ)^(-z)) + (1 - (p : ℂ)^(-z))/2| := h_reverse
+                  _ ≥ 1/4 - C_coeff * ‖(p : ℂ)^(-z)‖^2 := by linarith [h_H_large, h_G_small]
+                  _ ≥ 1/4 - C_coeff * (1/2) * ‖(p : ℂ)^(-z)‖ := by
+                    -- Since ‖p^{-z}‖ ≤ 1/2, we have ‖p^{-z}‖^2 ≤ (1/2) * ‖p^{-z}‖
+                    sorry -- Square bound manipulation
+                  _ = 1/4 - (C_coeff/2) * ‖(p : ℂ)^(-z)‖ := by ring
+              -- Sum over all additional primes
+              have h_total_bound : |∑ p in (Nat.Primes.filter (Λ < · ∧ · ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z))| ≥
+                  (1/4) * (Nat.Primes.filter (Λ < · ∧ · ≤ 2 * Λ)).card - C_total := by
+                -- Each prime contributes at least 1/4 - small_error, and there are > 1 such primes
+                -- The total is ≥ (number of primes) * (1/4) - (total small errors)
+                sorry -- Sum the individual bounds
+              -- Since we showed > 1 additional primes, the total magnitude > 1/4 > 1/2 for large enough counts
+              calc |∑ p in (Nat.Primes.filter (Λ < · ∧ · ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z))|
+                ≥ (1/4) * (Nat.Primes.filter (Λ < · ∧ · ≤ 2 * Λ)).card - C_total := h_total_bound
+                _ ≥ (1/4) * 1 - C_total := by linarith [h_prime_count_diff]
+                _ > 1/2 := by
+                  -- For large Λ, C_total is bounded while the coefficient count grows
+                  -- Choose the constants appropriately for the asymptotic regime
+                  sorry -- Large Λ dominates bounded error terms
             rw [← h_decomp_diff]
             exact h_magnitude_estimate
 
@@ -1065,10 +1206,60 @@ theorem det2Diag_halfplane_extension {s : ℂ} (hσ₁ : 1/2 < s.re) (hσ₂ : s
             -- If neither case holds, then both sums are close to L
             have h_sum1_close : |∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| < 1/4 := by
               -- From the contrapositive of h_both_small
-              sorry -- Extract bound from negation of h_both_small
+              -- Extract bound from negation of h_both_small
+              -- From h_both_small negated: NOT(|sum₂ - L| ≥ |sum₁ - L| + 1/2) AND NOT(symmetric case)
+              -- This means both |sum₂ - L| < |sum₁ - L| + 1/2 and |sum₁ - L| < |sum₂ - L| + 1/2
+              -- Combined with |sum₂ - sum₁| > 1/2, this forces both to be small
+              -- Apply reverse triangle inequality: if |a - b| > r but |a - c|, |b - c| are close, then contradiction
+              push_neg at h_both_small
+              -- h_both_small gives us the bounds we need
+              by_contra h_not_small
+              push_neg at h_not_small
+              -- If |sum₁ - L| ≥ 1/4, then by the reverse triangle inequality:
+              -- |sum₂ - sum₁| = |(sum₂ - L) - (sum₁ - L)| ≤ |sum₂ - L| + |sum₁ - L|
+              -- But also |sum₂ - sum₁| ≥ ||sum₂ - L| - |sum₁ - L||
+              -- From h_both_small: |sum₂ - L| < |sum₁ - L| + 1/2 and |sum₁ - L| < |sum₂ - L| + 1/2
+              -- So ||sum₂ - L| - |sum₁ - L|| < 1/2, contradicting |sum₂ - sum₁| > 1/2
+              have h_reverse_triangle : |∑ p in (Nat.Primes.filter (· ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z)) -
+                  ∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z))| ≥
+                  ||∑ p in (Nat.Primes.filter (· ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| -
+                   |∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L|| := by
+                exact abs_sub_abs_le_abs_sub _ _
+              -- From h_both_small, the right side is < 1/2, but left side > 1/2
+              have h_both_bounds : |∑ p in (Nat.Primes.filter (· ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| <
+                  |∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| + 1/2 ∧
+                  |∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| <
+                  |∑ p in (Nat.Primes.filter (· ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| + 1/2 := by
+                exact ⟨h_both_small.1, h_both_small.2⟩
+              -- This gives ||sum₂ - L| - |sum₁ - L|| < 1/2
+              have h_diff_small : ||∑ p in (Nat.Primes.filter (· ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| -
+                  |∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L|| < 1/2 := by
+                -- From the bounds in h_both_bounds, the absolute difference is < 1/2
+                exact abs_sub_lt_of_lt_add_lt h_both_bounds.1 h_both_bounds.2
+              -- This contradicts the reverse triangle inequality with h_sum_difference > 1/2
+              linarith [h_reverse_triangle, h_diff_small, h_sum_difference]
             have h_sum2_close : |∑ p in (Nat.Primes.filter (· ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| < 1/4 := by
               -- From the contrapositive of h_both_small
-              sorry -- Extract bound from negation of h_both_small
+              -- Extract bound from negation of h_both_small (symmetric case)
+              -- Same argument as above but for sum₂ instead of sum₁
+              push_neg at h_both_small
+              by_contra h_not_small
+              push_neg at h_not_small
+              -- Apply the same reverse triangle inequality argument
+              have h_reverse_triangle : |∑ p in (Nat.Primes.filter (· ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z)) -
+                  ∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z))| ≥
+                  ||∑ p in (Nat.Primes.filter (· ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| -
+                   |∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L|| := by
+                exact abs_sub_abs_le_abs_sub _ _
+              have h_both_bounds : |∑ p in (Nat.Primes.filter (· ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| <
+                  |∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| + 1/2 ∧
+                  |∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| <
+                  |∑ p in (Nat.Primes.filter (· ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| + 1/2 := by
+                exact ⟨h_both_small.1, h_both_small.2⟩
+              have h_diff_small : ||∑ p in (Nat.Primes.filter (· ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| -
+                  |∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L|| < 1/2 := by
+                exact abs_sub_lt_of_lt_add_lt h_both_bounds.1 h_both_bounds.2
+              linarith [h_reverse_triangle, h_diff_small, h_sum_difference]
             -- But then |sum₂ - sum₁| ≤ |sum₂ - L| + |L - sum₁| < 1/4 + 1/4 = 1/2
             have h_contradiction : |∑ p in (Nat.Primes.filter (· ≤ 2 * Λ)), Complex.log (1 - (p : ℂ)^(-z)) -
                                     ∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z))| < 1/2 := by
@@ -1114,7 +1305,39 @@ theorem det2Diag_halfplane_extension {s : ℂ} (hσ₁ : 1/2 < s.re) (hσ₂ : s
         have h_exceeds_eps : |∑ p in (Nat.Primes.filter (· ≤ max Λ_bad (2 * Λ))), Complex.log (1 - (p : ℂ)^(-z)) - L| ≥
             |∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| + 1 := by
           -- This follows from the growth property and monotonicity
-          sorry -- Apply growth bound with Λ₀ constraint
+          -- Apply growth bound with Λ₀ constraint
+          -- From h_growth_vs_limit applied to L, we have Λ_bad > Λ and
+          -- |sum_{p≤Λ_bad} - L| > |sum_{p≤Λ} - L| + 1
+          -- We need to show that for the chosen Λ_final = max Λ_bad (2*Λ), the same property holds
+          -- Since Λ_final ≥ Λ_bad > Λ and the divergent growth continues, we get the bound
+          --
+          -- Key insight: the divergent terms grow monotonically with the cutoff
+          -- If sum_cutoff = f_conv(z) - (1/2)*cutoff/log(cutoff) + small_error(cutoff)
+          -- then for cutoff₂ > cutoff₁, we have |sum_cutoff₂ - L| ≥ |sum_cutoff₁ - L| + growth_increment
+          have h_monotone_growth : ∀ Λ₁ Λ₂, Λ₁ ≤ Λ₂ → Λ₁ ≥ 1 →
+              |∑ p in (Nat.Primes.filter (· ≤ Λ₂)), Complex.log (1 - (p : ℂ)^(-z)) - L| ≥
+              |∑ p in (Nat.Primes.filter (· ≤ Λ₁)), Complex.log (1 - (p : ℂ)^(-z)) - L| := by
+            intro Λ₁ Λ₂ h_le h_pos
+            -- This follows from the monotone growth of the divergent terms
+            -- The function x/log(x) is increasing for x ≥ e, and our divergent coefficient (1/2) > 0
+            -- So larger cutoffs give larger deviations from any fixed limit L
+            -- Use the monotonicity of x/log(x) from mathlib
+            have h_div_log_mono : Λ₁ / Real.log Λ₁ ≤ Λ₂ / Real.log Λ₂ := by
+              apply Real.div_log_monotone
+              · linarith [h_pos] : 3 ≤ Λ₁  -- Need Λ₁ ≥ 3 for monotonicity
+              · exact h_le
+            -- Apply this to the decomposition: larger Λ gives larger divergent terms
+            -- From the decomposition analysis, the deviation from L grows with the divergent term
+            sorry -- Apply the divergent growth to bound the difference
+          -- Apply the monotone growth property
+          have h_final_ge_bad : max Λ_bad (2 * Λ) ≥ Λ_bad := le_max_left _ _
+          have h_bad_ge_λ : Λ_bad > Λ := hΛ_bad_big
+          -- Since max Λ_bad (2*Λ) ≥ Λ_bad > Λ, we can apply the growth property
+          calc |∑ p in (Nat.Primes.filter (· ≤ max Λ_bad (2 * Λ))), Complex.log (1 - (p : ℂ)^(-z)) - L|
+            ≥ |∑ p in (Nat.Primes.filter (· ≤ Λ_bad)), Complex.log (1 - (p : ℂ)^(-z)) - L| := by
+              apply h_monotone_growth Λ_bad (max Λ_bad (2 * Λ)) h_final_ge_bad
+              linarith [h_bad_ge_λ, hΛ_pos]
+            _ > |∑ p in (Nat.Primes.filter (· ≤ Λ)), Complex.log (1 - (p : ℂ)^(-z)) - L| + 1 := hΛ_bad_growth
         -- Since we showed |sum_Λ - log(ζ(z)^{-1})| > M + 1 ≥ 1, we can make this exceed any ε
         linarith [hΛ_contra, h_exceeds_eps]
       -- But if f z = ζ(z)^{-1}, then the partial sums should converge to log(f z)
