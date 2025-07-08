@@ -1,7 +1,7 @@
 import Mathlib.Analysis.InnerProductSpace.l2Space
 import Mathlib.Data.Real.GoldenRatio
-import Mathlib.Topology.Instances.ENNReal.Lemmas
-import Mathlib.Data.Nat.Prime.Basic
+import Mathlib.Topology.Instances.ENNReal
+import Mathlib.Data.Nat.Prime
 import Mathlib.Analysis.SpecialFunctions.Complex.Log
 import Mathlib.Topology.Algebra.InfiniteSum.Basic
 

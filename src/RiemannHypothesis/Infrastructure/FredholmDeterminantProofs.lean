@@ -1,7 +1,7 @@
 import Mathlib.Analysis.InnerProductSpace.l2Space
-import Mathlib.Analysis.Normed.Operator.ContinuousLinearMap
+import Mathlib.Analysis.NormedSpace.ContinuousLinearMap
 import Mathlib.Analysis.SpecialFunctions.Pow.Complex
-import Mathlib.Data.Nat.Prime.Basic
+import Mathlib.Data.Nat.Prime
 import RiemannHypothesis.Infrastructure.WeightedHilbertSpace
 import RiemannHypothesis.Infrastructure.FredholmDeterminant
 

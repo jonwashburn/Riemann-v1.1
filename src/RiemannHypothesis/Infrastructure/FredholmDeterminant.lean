@@ -1,7 +1,6 @@
 import Mathlib.Analysis.InnerProductSpace.l2Space
-import Mathlib.Analysis.Normed.Operator.ContinuousLinearMap
-import Mathlib.Analysis.Complex.Cpow
-import Mathlib.Analysis.Holomorphic.Prod
+import Mathlib.Analysis.NormedSpace.ContinuousLinearMap
+import Mathlib.Analysis.SpecialFunctions.Pow.Complex
 import RiemannHypothesis.Infrastructure.WeightedHilbertSpace
 
 /-!
