@@ -44,11 +44,17 @@ theorem zeta_nonzero_for_re_gt_one (s : ℂ) (hs : 1 < s.re) : riemannZeta s ≠
 -- Zeta function is nonzero for positive even integers
 theorem zeta_nonzero_for_positive_even (n : ℕ) (hn : n > 0) :
     riemannZeta (2 * n) ≠ 0 := by
-  sorry
+  have h_re_gt : 1 < (2 * n : ℂ).re := by
+    norm_cast
+    linarith [hn]
+  exact zeta_nonzero_for_re_gt_one (2 * n) h_re_gt
 
 -- Zeta function is nonzero at positive integers ≥ 2
 theorem zeta_nonzero_at_pos_int (n : ℕ) (hn : n ≥ 2) : riemannZeta n ≠ 0 := by
-  sorry
+  have h_re_gt : 1 < (n : ℂ).re := by
+    norm_cast
+    exact Nat.one_lt_cast.mpr hn
+  exact zeta_nonzero_for_re_gt_one n h_re_gt
 
 -- Gamma function has no zeros
 theorem gamma_ne_zero (s : ℂ) (hs : ∀ n : ℕ, s ≠ -n) : Complex.Gamma s ≠ 0 := by

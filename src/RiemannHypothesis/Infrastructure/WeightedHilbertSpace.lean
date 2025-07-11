@@ -39,9 +39,10 @@ noncomputable def domainH : Set WeightedL2 :=
 lemma norm_sq_eq_sum (ψ : WeightedL2) :
     ‖ψ‖ ^ 2 = ∑' p : {p : ℕ // Nat.Prime p}, ‖ψ p‖ ^ 2 := by
   -- For lp 2 spaces, this is the definition of the l² norm
-  -- The norm is ‖f‖ = (∑ |f(i)|²)^(1/2), so ‖f‖² = ∑ |f(i)|²
-  -- This follows from the standard lp norm formula for p = 2
-  sorry
+  -- Use the standard lp norm formula: ‖f‖_p^p = ∑' i, ‖f i‖^p
+  -- For p = 2: ‖f‖² = ∑' i, ‖f i‖²
+  rw [lp.norm_rpow_eq_tsum (by norm_num : (0 : ℝ) < (2 : ℝ≥0∞).toReal)]
+  simp only [ENNReal.toReal_ofNat]
 
 end WeightedL2
 
